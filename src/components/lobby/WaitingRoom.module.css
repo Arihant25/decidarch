@@ -74,7 +74,9 @@
 }
 
 .backLink {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-family: var(--font-mono);
   font-size: 0.6rem;
   letter-spacing: 0.2em;
@@ -352,6 +354,14 @@
 .kickBtn:hover {
   color: var(--red);
   border-color: var(--red);
+}
+
+@media (hover: none) {
+  .kickBtn {
+    opacity: 1;
+    width: 44px;
+    height: 44px;
+  }
 }
 
 /* Empty slots */
