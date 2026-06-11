@@ -1,0 +1,285 @@
+/* Deal Intro — cards dealt across the drafting table on game start */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 30%, rgba(84, 200, 255, 0.06), transparent 60%),
+    radial-gradient(ellipse 120% 90% at 50% 110%, rgba(2, 6, 14, 0.9), transparent 70%),
+    rgba(6, 14, 27, 0.96);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* Drafting grid on the table itself */
+.overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--gridline-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--gridline-major) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 80%);
+  pointer-events: none;
+}
+
+.table {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+}
+
+/* --------------- Cards --------------- */
+
+.card,
+.deckCard {
+  --card-w: clamp(92px, 11vw, 138px);
+  position: absolute;
+  width: var(--card-w);
+  aspect-ratio: 5 / 7;
+  perspective: 1100px;
+  will-change: transform;
+}
+
+.deck {
+  position: absolute;
+  width: clamp(92px, 11vw, 138px);
+  aspect-ratio: 5 / 7;
+  z-index: 5;
+}
+
+.deckCard {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--line-strong);
+  background: var(--ink-card);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardInner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.cardBack,
+.cardFace {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 1px solid var(--line-strong);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.cardBack {
+  background: var(--ink-card);
+}
+
+.cardFace {
+  transform: rotateY(180deg);
+  background: linear-gradient(165deg, #122a47 0%, #0c1d33 70%);
+  gap: 0.3rem;
+  padding: 0.6rem;
+}
+
+/* Back art: grid, compass rose, wordmark */
+.backArt {
+  position: absolute;
+  inset: 5px;
+  border: 1px dashed var(--line-dashed);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-image:
+    linear-gradient(var(--gridline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--gridline) 1px, transparent 1px);
+  background-size: 13px 13px;
+  color: var(--cyan);
+}
+
+.compass {
+  width: 46%;
+  filter: drop-shadow(0 0 6px var(--cyan-glow));
+}
+
+.backWord {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  color: var(--dim);
+}
+
+/* Face: numbered concern sheet with redacted title */
+.faceTopRow {
+  position: absolute;
+  top: 7px;
+  left: 9px;
+  right: 9px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.45rem;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+}
+
+.faceNumber {
+  font-family: var(--font-mono);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--paper);
+  text-shadow: 0 0 18px var(--cyan-glow);
+}
+
+.faceLabel {
+  font-family: var(--font-mono);
+  font-size: 0.45rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  color: var(--cyan);
+}
+
+.faceRedacted {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  margin-top: 0.3rem;
+}
+
+.faceRedacted i {
+  display: block;
+  height: 5px;
+  background: repeating-linear-gradient(90deg,
+      var(--faint) 0 6px,
+      transparent 6px 9px);
+  opacity: 0.5;
+}
+
+.faceHatch {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  border-top: 1px solid var(--line);
+  background-image: repeating-linear-gradient(-45deg,
+      transparent 0 7px,
+      rgba(255, 92, 56, 0.35) 7px 8px);
+}
+
+/* --------------- Stamp --------------- */
+
+.flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 46%, rgba(255, 92, 56, 0.5), transparent 70%);
+  pointer-events: none;
+  z-index: 40;
+}
+
+.stamp {
+  position: absolute;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.9rem 1.6rem;
+  border: 3px double var(--red);
+  background: rgba(7, 17, 32, 0.55);
+  color: var(--red);
+  font-family: var(--font-mono);
+  text-align: center;
+  box-shadow:
+    0 0 0 1px rgba(255, 92, 56, 0.25),
+    0 0 44px var(--red-glow),
+    inset 0 0 22px rgba(255, 92, 56, 0.12);
+  /* Worn-ink texture — alpha noise speckles the stamp like uneven ink */
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='6' intercept='-0.35'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.stampTop,
+.stampSub {
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.stampMain {
+  font-size: clamp(1rem, 2.6vw, 1.7rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+}
+
+/* --------------- Caption + skip --------------- */
+
+.captionRow {
+  position: absolute;
+  bottom: clamp(2rem, 6vh, 3.5rem);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--dim);
+}
+
+.cursor {
+  width: 7px;
+  height: 13px;
+  background: var(--red);
+  animation: blink 1s step-end infinite;
+}
+
+.skipHint {
+  position: absolute;
+  bottom: 1rem;
+  right: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.24em;
+  color: var(--faint);
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .stampTop,
+  .stampSub {
+    white-space: normal;
+  }
+}

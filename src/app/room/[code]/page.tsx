@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { AnimatePresence } from 'motion/react';
 import { GameProvider, useGame } from '@/context/GameContext';
 import { WaitingRoom } from '@/components/lobby/WaitingRoom';
 import { GameBoard } from '@/components/game/GameBoard';
+import { DealIntro } from '@/components/game/DealIntro';
 import { GameVersion } from '@/lib/types';
 import { EVENT_CARDS } from '@/lib/cardData';
 import styles from './page.module.css';
@@ -64,7 +66,26 @@ function RoomContent() {
     }
   }, [error]);
 
+  // Card-dealing intro — plays whenever this client enters an active game
+  // (game start, refresh, or rejoin), but not on the end-of-game scoreboard
+  const [showDealIntro, setShowDealIntro] = useState(false);
+  const introPlayedRef = useRef(false);
   const currentPhase = gameState?.phase;
+
+  useEffect(() => {
+    if (
+      !introPlayedRef.current &&
+      currentPhase &&
+      currentPhase !== 'lobby' &&
+      currentPhase !== 'scoring' &&
+      currentPhase !== 'finished' &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      introPlayedRef.current = true;
+      setShowDealIntro(true);
+    }
+  }, [currentPhase]);
+
   useEffect(() => {
     if (currentPhase && currentPhase !== 'lobby') {
       EVENT_CARDS.forEach((card) => {
@@ -186,7 +207,21 @@ function RoomContent() {
     return <WaitingRoom />;
   }
 
-  return <GameBoard />;
+  return (
+    <>
+      <GameBoard />
+      <AnimatePresence>
+        {showDealIntro && (
+          <DealIntro
+            cardCount={gameState.concernOrder.length}
+            roomCode={gameState.roomCode}
+            gameVersion={gameState.gameVersion}
+            onComplete={() => setShowDealIntro(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
 }
 
 export default function RoomPage() {
