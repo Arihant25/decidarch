@@ -1,0 +1,401 @@
+/* Waiting Room — "Assembly Roster" drafting sheet */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.5rem, 4vw, 3rem) var(--space-md);
+}
+
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  background: rgba(8, 19, 35, 0.72);
+  border: 1px solid var(--line);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  animation: fadeInUp 0.6s var(--ease-draft) both;
+}
+
+/* Crop marks */
+.crop {
+  position: absolute;
+  width: 19px;
+  height: 19px;
+  pointer-events: none;
+}
+
+.crop::before,
+.crop::after {
+  content: '';
+  position: absolute;
+  background: rgba(141, 198, 255, 0.65);
+}
+
+.crop::before {
+  left: 9px;
+  top: 0;
+  width: 1px;
+  height: 100%;
+}
+
+.crop::after {
+  top: 9px;
+  left: 0;
+  height: 1px;
+  width: 100%;
+}
+
+.cropTL { top: -10px; left: -10px; }
+.cropTR { top: -10px; right: -10px; }
+.cropBL { bottom: -10px; left: -10px; }
+.cropBR { bottom: -10px; right: -10px; }
+
+/* --------------- Header --------------- */
+
+.header {
+  margin-bottom: var(--space-xl);
+}
+
+.backLink {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+  margin-bottom: var(--space-lg);
+  transition: color var(--transition-fast);
+}
+
+.backLink:hover {
+  color: var(--red);
+}
+
+.formLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  color: var(--faint);
+  margin-bottom: 0.5rem;
+}
+
+.formLabel::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* --------------- Room Code --------------- */
+
+.codeSection {
+  margin-bottom: var(--space-xl);
+}
+
+.codeLabel {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  color: var(--dim);
+  margin-bottom: var(--space-sm);
+}
+
+.codeBox {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-lg) var(--space-md);
+  background: var(--cyan-soft);
+  border: 1px dashed var(--cyan);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    box-shadow var(--transition-base),
+    transform 0.15s ease;
+}
+
+.codeBox:hover {
+  background: rgba(84, 200, 255, 0.12);
+  box-shadow: 4px 4px 0 rgba(84, 200, 255, 0.15);
+  transform: translate(-2px, -2px);
+}
+
+.codeBox:active {
+  transform: translate(0, 0);
+  box-shadow: none;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  margin-right: -0.35em; /* compensate trailing tracking */
+  color: var(--cyan);
+}
+
+.copyHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.575rem;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+}
+
+.linkBtn {
+  width: 100%;
+  margin-top: var(--space-md);
+}
+
+/* --------------- Players --------------- */
+
+.playersSection {
+  margin-bottom: var(--space-lg);
+}
+
+.playersHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--line);
+}
+
+.playersHeader h2 {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  color: var(--dim);
+}
+
+.playerCount {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.playerList {
+  display: flex;
+  flex-direction: column;
+}
+
+.playerCard,
+.emptySlot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 0.7rem 0.25rem;
+  border-bottom: 1px dashed var(--line-dashed);
+}
+
+.playerCard {
+  transition: background var(--transition-fast);
+}
+
+.playerCard:hover {
+  background: rgba(141, 198, 255, 0.04);
+}
+
+.playerIndex {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--red);
+  flex-shrink: 0;
+}
+
+.playerAvatar {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: rgba(141, 198, 255, 0.07);
+  font-weight: 800;
+  font-size: var(--text-base);
+  color: var(--paper);
+  flex-shrink: 0;
+}
+
+.playerInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.playerName {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  overflow: hidden;
+}
+
+.youBadge,
+.hostBadge {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.youBadge {
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+  background: var(--cyan-soft);
+}
+
+.hostBadge {
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  background: var(--gold-soft);
+}
+
+.playerStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  color: var(--faint);
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+}
+
+.statusOnline {
+  background: var(--mint);
+  box-shadow: 0 0 6px var(--mint-glow);
+}
+
+.statusOffline {
+  background: var(--faint);
+}
+
+.kickBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--faint);
+  opacity: 0;
+  transition:
+    opacity var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.playerCard:hover .kickBtn {
+  opacity: 1;
+}
+
+.kickBtn:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+/* Empty slots */
+.emptySlot {
+  opacity: 0.45;
+}
+
+.emptySlot .playerIndex {
+  color: var(--faint);
+}
+
+.emptyAvatar {
+  width: 36px;
+  height: 36px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.emptyText {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  color: var(--faint);
+}
+
+/* --------------- Start --------------- */
+
+.startSection {
+  margin-top: var(--space-xl);
+}
+
+.startBtn {
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* --------------- Wait message --------------- */
+
+.waitMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  padding: var(--space-md);
+}
+
+.waitMessage p {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+}
+
+.waitDots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  background: var(--red);
+  animation: blink 1.4s ease-in-out infinite;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}

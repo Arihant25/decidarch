@@ -1,0 +1,440 @@
+/* Score Board — final inspection sheet */
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: var(--space-2xl);
+}
+
+/* --------------- Header --------------- */
+
+.header {
+  position: relative;
+  text-align: center;
+  margin-bottom: var(--space-xl);
+  padding: var(--space-lg) 0 var(--space-md);
+}
+
+.formLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  color: var(--faint);
+  margin-bottom: var(--space-sm);
+}
+
+.formLabel::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-bottom: var(--space-sm);
+  animation: fadeInUp 0.6s var(--ease-draft) both;
+}
+
+.scoreLine {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--dim);
+}
+
+.scoreLine strong {
+  color: var(--gold);
+  font-size: 1rem;
+}
+
+.gradeStamp {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  text-align: center;
+  border-width: 3px;
+  border-style: solid;
+  border-radius: 6px;
+  outline-width: 1px;
+  outline-style: solid;
+  outline-offset: 4px;
+  padding: 0.5em 0.8em;
+  margin-top: var(--space-lg);
+  transform: rotate(-7deg);
+  animation: stampIn 0.5s 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.gradeWin {
+  color: var(--mint);
+  border-color: var(--mint);
+  outline-color: rgba(67, 222, 155, 0.45);
+}
+
+.gradeLost {
+  color: var(--red);
+  border-color: var(--red);
+  outline-color: rgba(255, 92, 56, 0.45);
+}
+
+.lossReason {
+  background: var(--red-soft);
+  border: 1px dashed var(--red);
+  padding: var(--space-md) var(--space-lg);
+  color: var(--paper);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-xl);
+}
+
+.lossLabel {
+  display: block;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: var(--red);
+  margin-bottom: 4px;
+}
+
+.lossSummary {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--dim);
+  margin-bottom: var(--space-sm);
+}
+
+.lossRows {
+  border-top: 1px dashed rgba(255, 92, 56, 0.35);
+}
+
+.lossRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  padding: var(--space-sm) 2px;
+  border-bottom: 1px dashed rgba(255, 92, 56, 0.2);
+}
+
+.lossRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.lossWho {
+  font-size: var(--text-sm);
+}
+
+.lossWho strong {
+  font-weight: 700;
+  color: var(--paper);
+}
+
+.lossAttr {
+  color: var(--dim);
+}
+
+.lossNumbers {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+.lossShort {
+  color: var(--red);
+  border: 1px solid var(--red);
+  background: rgba(255, 92, 56, 0.12);
+  padding: 0.1rem 0.4rem;
+  border-radius: 2px;
+  font-weight: 700;
+}
+
+/* --------------- Sections --------------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.section {
+  background: rgba(8, 19, 35, 0.72);
+  border: 1px solid var(--line);
+  padding: var(--space-lg);
+}
+
+.section h3,
+.finalCalc h3 {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--dim);
+  margin-bottom: var(--space-xs);
+}
+
+.section h3 i,
+.finalCalc h3 i {
+  font-style: normal;
+  color: var(--red);
+  margin-right: 0.5em;
+}
+
+.helpText {
+  font-size: var(--text-xs);
+  color: var(--faint);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--line);
+}
+
+/* QA Table */
+.table {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 2px;
+  border-bottom: 1px dashed var(--line-dashed);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.attrName {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.attrStats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.statPlus {
+  color: var(--mint);
+}
+
+.statMinus {
+  color: var(--red);
+}
+
+.statTotal {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  margin-left: var(--space-sm);
+  min-width: 28px;
+  text-align: right;
+}
+
+.statPositive {
+  color: var(--mint);
+}
+
+.statNegative {
+  color: var(--red);
+}
+
+/* Stakeholders */
+.stakeholders {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.stakeholderCard {
+  background: rgba(141, 198, 255, 0.04);
+  border: 1px solid var(--line);
+  padding: var(--space-md);
+}
+
+.shHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: var(--space-xs);
+}
+
+.shHeader h4 {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+.shSatisfied,
+.shUnsatisfied {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 2px;
+}
+
+.shSatisfied {
+  color: var(--mint);
+  border: 1px solid var(--mint);
+  background: var(--mint-soft);
+}
+
+.shUnsatisfied {
+  color: var(--red);
+  border: 1px solid var(--red);
+  background: var(--red-soft);
+}
+
+.shDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--space-sm);
+}
+
+.shRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  font-size: var(--text-xs);
+  color: var(--dim);
+}
+
+.shNumbers {
+  display: flex;
+  gap: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.satPlus {
+  color: var(--mint);
+  font-weight: 600;
+}
+
+.satMinus {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.shTotal {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  padding-top: var(--space-sm);
+  border-top: 1px dashed var(--line-dashed);
+}
+
+.shTotal strong {
+  color: var(--gold);
+  font-size: 0.8rem;
+}
+
+/* --------------- Final Calc --------------- */
+
+.finalCalc {
+  position: relative;
+  background: rgba(8, 19, 35, 0.85);
+  border: 1px solid var(--line-strong);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.finalCalc::before,
+.finalCalc::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.finalCalc::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--gold);
+  border-left: 2px solid var(--gold);
+}
+
+.finalCalc::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--gold);
+  border-right: 2px solid var(--gold);
+}
+
+.finalCalc h3 {
+  margin-bottom: var(--space-md);
+}
+
+.calcRow {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--dim);
+  margin-bottom: var(--space-sm);
+}
+
+.calcMinus {
+  color: var(--red);
+}
+
+.calcTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 2px solid var(--gold);
+  color: var(--gold);
+}
+
+.footer {
+  text-align: center;
+}
+
+/* --------------- Responsive --------------- */
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

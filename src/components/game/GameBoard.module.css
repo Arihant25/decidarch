@@ -1,0 +1,192 @@
+/* Game Board — drafting table layout */
+
+.layout {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* --------------- Top drawing strip --------------- */
+
+.topBar {
+  display: flex;
+  align-items: stretch;
+  background: rgba(7, 17, 32, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-right: 1px solid var(--line);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.cellFiller {
+  flex: 1;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 10px,
+    rgba(141, 198, 255, 0.06) 10px 11px
+  );
+}
+
+.logoCell {
+  font-weight: 700;
+  font-size: 0.6875rem;
+  color: var(--paper);
+  transition: color var(--transition-fast);
+}
+
+.logoCell span {
+  color: var(--cyan);
+}
+
+.logoCell:hover {
+  color: var(--red);
+}
+
+.logoCell:hover span {
+  color: var(--red);
+}
+
+.roomCell {
+  color: var(--red);
+  font-weight: 700;
+  background: var(--red-soft);
+}
+
+.phaseCell {
+  overflow: hidden;
+}
+
+.timerCell {
+  border-right: none;
+  border-left: 1px solid var(--line);
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--dim);
+}
+
+.timerExpired {
+  color: var(--red);
+  background: var(--red-soft);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* --------------- Timer bar --------------- */
+
+.timerBar {
+  height: 2px;
+  background: rgba(141, 198, 255, 0.12);
+  position: sticky;
+  top: 37px;
+  z-index: 100;
+}
+
+.timerBarFill {
+  height: 100%;
+  transition: width 1s linear, background 2s ease;
+}
+
+/* --------------- Main area --------------- */
+
+.mainArea {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr) 300px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Sidebars as drawing margins */
+.sidebar {
+  background: rgba(8, 19, 35, 0.6);
+  border-right: 1px solid var(--line);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  overflow-y: auto;
+}
+
+.center {
+  padding: clamp(1rem, 3vw, 2rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.rightSidebar {
+  background: rgba(8, 19, 35, 0.6);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* --------------- Responsive --------------- */
+
+@media (max-width: 1200px) {
+  .mainArea {
+    grid-template-columns: 280px minmax(0, 1fr) 260px;
+  }
+}
+
+@media (max-width: 900px) {
+  .roomCell {
+    display: none;
+  }
+
+  .phaseCell {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .cellFiller {
+    display: none;
+  }
+
+  .mainArea {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .sidebar,
+  .rightSidebar {
+    max-height: none;
+    overflow-y: visible;
+    border-right: none;
+    border-left: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .center {
+    order: -1;
+    max-height: none;
+    overflow-y: visible;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 480px) {
+  .logoCell {
+    padding: 0.6rem 0.7rem;
+  }
+
+  .cell {
+    padding: 0.6rem 0.7rem;
+  }
+}

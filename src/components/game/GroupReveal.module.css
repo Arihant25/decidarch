@@ -1,0 +1,166 @@
+/* Group Reveal — filed position memos */
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: var(--space-xl);
+}
+
+.headerLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  color: var(--dim);
+  margin-bottom: var(--space-sm);
+}
+
+.headerTick {
+  display: inline-block;
+  width: 26px;
+  height: 2px;
+  background: var(--gold);
+  flex-shrink: 0;
+}
+
+.header h2 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-xs);
+}
+
+.headerSub {
+  color: var(--dim);
+  font-size: var(--text-sm);
+}
+
+.decisionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.decisionCard {
+  position: relative;
+  background: linear-gradient(165deg, #0e2138 0%, #091627 70%);
+  border: 1px solid var(--line-strong);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  box-shadow: 0 14px 32px rgba(1, 4, 10, 0.45);
+}
+
+.decisionCard::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px dashed var(--line-dashed);
+  pointer-events: none;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: var(--space-sm);
+}
+
+.playerInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 3px;
+  border: 1px solid var(--gold);
+  background: var(--gold-soft);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: var(--text-sm);
+}
+
+.playerName {
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+.cardIndex {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+}
+
+.chosenOption {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.optionLabel {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
+  color: var(--faint);
+}
+
+.optionName {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.rationaleBox {
+  flex: 1;
+  background: rgba(141, 198, 255, 0.05);
+  border-left: 2px solid var(--line-strong);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.rationaleLabel {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
+  color: var(--faint);
+  margin-bottom: 4px;
+}
+
+.rationaleText {
+  font-size: var(--text-sm);
+  color: var(--paper);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.hostControls {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-xl);
+}
+
+.waitMessage {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+  margin-top: var(--space-xl);
+  animation: pulse 1.8s ease-in-out infinite;
+}

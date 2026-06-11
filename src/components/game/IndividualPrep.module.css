@@ -1,0 +1,287 @@
+/* Individual Prep — concern sheet & design options */
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* --------------- Concern Card --------------- */
+
+.concernCard {
+  position: relative;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: linear-gradient(165deg, #0e2138 0%, #091627 70%);
+  border: 1px solid rgba(67, 222, 155, 0.45);
+  margin-bottom: var(--space-xl);
+  box-shadow: 0 14px 36px rgba(1, 4, 10, 0.45);
+}
+
+.concernCard::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px dashed rgba(67, 222, 155, 0.25);
+  pointer-events: none;
+}
+
+.concernHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  font-family: var(--font-mono);
+}
+
+.concernTag {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--mint);
+  border: 1px solid var(--mint);
+  border-radius: 3px;
+  padding: 0.15rem 0.4rem;
+}
+
+.concernKind {
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.concernId {
+  margin-left: auto;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  color: var(--faint);
+}
+
+.concernTitle {
+  font-size: clamp(1.25rem, 3vw, 1.6rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: var(--space-sm);
+}
+
+.concernDesc {
+  font-size: var(--text-sm);
+  color: var(--dim);
+  line-height: 1.6;
+  max-width: 60ch;
+}
+
+/* --------------- Options --------------- */
+
+.optionsHeading {
+  margin-bottom: var(--space-lg);
+}
+
+.optionsHeading h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--dim);
+  margin-bottom: var(--space-xs);
+}
+
+.headingTick {
+  display: inline-block;
+  width: 26px;
+  height: 2px;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.optionsHeading p {
+  font-size: var(--text-sm);
+  color: var(--faint);
+}
+
+.optionsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.optionCard {
+  text-align: left;
+  width: 100%;
+  padding: var(--space-lg);
+  background: rgba(8, 19, 35, 0.72);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  transition:
+    border-color var(--transition-base),
+    background var(--transition-base),
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.optionCard:hover {
+  border-color: var(--line-strong);
+  background: rgba(141, 198, 255, 0.05);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 rgba(141, 198, 255, 0.1);
+}
+
+.optionSelected,
+.optionSelected:hover {
+  border-color: var(--cyan);
+  background: var(--cyan-soft);
+  box-shadow: 5px 5px 0 rgba(84, 200, 255, 0.18);
+  transform: translate(-2px, -2px);
+}
+
+.optionDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+}
+
+.optionDisabled:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--line);
+  background: rgba(8, 19, 35, 0.72);
+}
+
+.optionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.optionNumber {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--red);
+}
+
+.selectedBadge {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+  background: var(--cyan-soft);
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+}
+
+.optionName {
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--paper);
+  margin-bottom: var(--space-xs);
+}
+
+.optionDesc {
+  font-size: var(--text-sm);
+  color: var(--dim);
+  line-height: 1.5;
+  margin-bottom: var(--space-md);
+}
+
+.impactGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px dashed var(--line-dashed);
+}
+
+.impactRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  padding: 3px 0;
+}
+
+.impactAttr {
+  font-size: var(--text-xs);
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --------------- Rationale --------------- */
+
+.rationaleSection {
+  margin-top: var(--space-lg);
+}
+
+.submitBtn {
+  width: 100%;
+  justify-content: space-between;
+  margin-top: var(--space-md);
+}
+
+/* --------------- Submitted state --------------- */
+
+.submitted {
+  position: relative;
+  text-align: center;
+  padding: var(--space-3xl) var(--space-xl);
+  background: rgba(8, 19, 35, 0.72);
+  border: 1px solid var(--line);
+}
+
+.stamp {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--mint);
+  border: 2.5px solid var(--mint);
+  border-radius: 5px;
+  outline: 1px solid rgba(67, 222, 155, 0.45);
+  outline-offset: 3px;
+  padding: 0.5em 0.8em;
+  transform: rotate(-7deg);
+  margin-bottom: var(--space-lg);
+  animation: stampIn 0.45s 0.15s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.submitted h3 {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+.submitted p {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  color: var(--faint);
+  margin-bottom: var(--space-lg);
+}
+
+.progressBar {
+  width: min(240px, 80%);
+  height: 4px;
+  background: rgba(141, 198, 255, 0.12);
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--mint);
+  transition: width var(--transition-base);
+}

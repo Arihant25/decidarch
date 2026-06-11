@@ -1,0 +1,279 @@
+/* Stakeholder registry — drafting sidebar */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  color: var(--faint);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--line);
+}
+
+.heading::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  flex-shrink: 0;
+}
+
+.card {
+  position: relative;
+  padding: var(--space-md);
+  background: rgba(8, 19, 35, 0.72);
+  border: 1px solid var(--line);
+  transition: border-color var(--transition-base);
+}
+
+.card:hover {
+  border-color: var(--line-strong);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.name {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.statusBadge {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.1rem 0.3rem;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.statusSatisfied {
+  background: var(--mint-soft);
+  color: var(--mint);
+  border: 1px solid var(--mint);
+}
+
+.statusUnsatisfied {
+  background: var(--red-soft);
+  color: var(--red);
+  border: 1px dashed var(--red);
+}
+
+.role {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+  text-align: right;
+}
+
+.description {
+  font-size: var(--text-xs);
+  color: var(--dim);
+  line-height: 1.45;
+  margin-bottom: var(--space-sm);
+}
+
+.priorities {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.priority {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: 3px 0;
+  border-bottom: 1px dashed var(--line-dashed);
+}
+
+.priority:last-child {
+  border-bottom: none;
+}
+
+.attrName {
+  font-size: var(--text-xs);
+  color: var(--dim);
+}
+
+.attrValue {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.attrValue strong {
+  color: var(--gold);
+}
+
+/* --- Decision-impact reactions --- */
+
+.cardCheer {
+  animation: cardCheer 2.6s ease;
+}
+
+.cardGrumble {
+  animation: cardGrumble 2.6s ease;
+}
+
+@keyframes cardCheer {
+  0%,
+  65% {
+    border-color: var(--mint);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--mint) 22%, transparent);
+  }
+  100% {
+    border-color: var(--line);
+    box-shadow: none;
+  }
+}
+
+@keyframes cardGrumble {
+  0%,
+  65% {
+    border-color: var(--red);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--red) 22%, transparent);
+  }
+  100% {
+    border-color: var(--line);
+    box-shadow: none;
+  }
+}
+
+.reaction {
+  position: absolute;
+  top: -0.6rem;
+  right: var(--space-md);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.12rem 0.4rem;
+  background: rgba(8, 19, 35, 0.95);
+  border: 1px solid;
+  border-radius: 2px;
+  animation: reactionIn 2.6s ease forwards;
+}
+
+.reactionUp {
+  border-color: var(--mint);
+  color: var(--mint);
+}
+
+.reactionDown {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+@keyframes reactionIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.7);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0) scale(1.15);
+  }
+  20% {
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.badgePop {
+  display: inline-block;
+  animation: badgePop 0.6s ease;
+}
+
+@keyframes badgePop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.prioUp,
+.prioDown {
+  display: inline-block;
+  font-weight: 700;
+  animation: prioTick 2.6s ease forwards;
+}
+
+.prioUp {
+  color: var(--mint);
+}
+
+.prioDown {
+  color: var(--red);
+}
+
+@keyframes prioTick {
+  0% {
+    opacity: 0;
+    transform: translateX(4px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardCheer,
+  .cardGrumble,
+  .reaction,
+  .badgePop,
+  .prioUp,
+  .prioDown {
+    animation: none;
+  }
+}

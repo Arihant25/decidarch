@@ -1,0 +1,411 @@
+/* Event Phase — redline site incident */
+
+.container {
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --------------- Event card --------------- */
+
+.eventCard {
+  position: relative;
+  background: linear-gradient(165deg, #1c0f10 0%, #120a10 60%, #0b1a30 130%);
+  border: 1px solid var(--red);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  padding-top: clamp(2rem, 5vw, 3rem);
+  margin-bottom: var(--space-xl);
+  box-shadow:
+    0 18px 44px rgba(1, 4, 10, 0.55),
+    0 0 32px -10px var(--red-glow);
+  overflow: hidden;
+}
+
+.eventCard::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px dashed rgba(255, 92, 56, 0.3);
+  pointer-events: none;
+}
+
+.hazardStrip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--red) 0 12px,
+    transparent 12px 24px
+  );
+  opacity: 0.85;
+}
+
+.eventHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  font-family: var(--font-mono);
+}
+
+.eventTag {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--red);
+  border: 1px solid var(--red);
+  border-radius: 3px;
+  padding: 0.15rem 0.4rem;
+}
+
+.eventKind {
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.eventIcon {
+  margin-left: auto;
+  display: flex;
+  color: var(--red);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.eventTitle {
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--red);
+  margin-bottom: var(--space-sm);
+}
+
+.eventDesc {
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--paper);
+  margin-bottom: var(--space-lg);
+  max-width: 56ch;
+}
+
+.eventImageWrapper {
+  margin: var(--space-md) 0 var(--space-lg) 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.eventImage {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.effectBox {
+  position: relative;
+  background: rgba(7, 17, 32, 0.6);
+  border-left: 3px solid var(--red);
+  padding: var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--dim);
+  text-align: left;
+}
+
+.effectLabel {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: var(--red);
+  margin-bottom: 4px;
+}
+
+/* --------------- Action area --------------- */
+
+.actionArea {
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-lg) 0;
+}
+
+.prompt {
+  color: var(--dim);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.waitMessage {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+/* --------------- Revision area --------------- */
+
+.revisionArea {
+  background: rgba(8, 19, 35, 0.72);
+  border: 1px solid var(--line);
+  padding: clamp(1.25rem, 3vw, 2rem);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.revisionHeader {
+  margin-bottom: var(--space-lg);
+}
+
+.revisionHeader h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--dim);
+  margin-bottom: var(--space-xs);
+}
+
+.headingTick {
+  display: inline-block;
+  width: 26px;
+  height: 2px;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.revisionHeader p {
+  color: var(--faint);
+  font-size: var(--text-sm);
+}
+
+.pastDecisions {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-xl);
+}
+
+.decisionItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px dashed var(--line-dashed);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.decisionItem:hover {
+  background: rgba(141, 198, 255, 0.05);
+}
+
+.decisionSelected {
+  background: var(--red-soft);
+  border-bottom-color: var(--red);
+}
+
+.decisionIndex {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--red);
+  flex-shrink: 0;
+}
+
+.decisionInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.decisionConcern {
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.decisionOption {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+.reviseTag {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--faint);
+  border: 1px solid var(--line-strong);
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.decisionItem:hover .reviseTag,
+.decisionSelected .reviseTag {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+/* --------------- Revision form --------------- */
+
+.revisionForm {
+  background: rgba(7, 17, 32, 0.6);
+  border: 1px solid var(--line-strong);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.revisionForm h4 {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+}
+
+.revisionForm h4 span {
+  color: var(--paper);
+}
+
+.optionsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.optionCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: rgba(141, 198, 255, 0.04);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.optionCard:hover:not(.optionDisabled) {
+  background: rgba(141, 198, 255, 0.08);
+  border-color: var(--line-strong);
+}
+
+.previouslySelectedBadge {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  background: var(--gold-soft);
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+  margin-left: auto;
+}
+
+.optionSelected,
+.optionCard.optionSelected:hover:not(.optionDisabled) {
+  border-color: var(--mint);
+  background: var(--mint-soft);
+}
+
+.optionDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+}
+
+.optionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.impactGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-xs);
+  padding-top: var(--space-sm);
+  margin-top: var(--space-xs);
+  border-top: 1px dashed var(--line-dashed);
+}
+
+.impactRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.impactAttr {
+  font-size: var(--text-xs);
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.optionSelected,
+.optionCard.optionSelected:hover {
+  border-color: var(--mint);
+  background: var(--mint-soft);
+}
+
+.optIndex {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--mint);
+  flex-shrink: 0;
+}
+
+.optName {
+  font-size: var(--text-sm);
+  color: var(--paper);
+}
+
+.finishSection {
+  text-align: center;
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-lg);
+  margin-top: auto;
+}
+
+.hostNotice {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  padding: var(--space-md);
+  border: 1px dashed var(--gold);
+  background: var(--gold-soft);
+  margin-bottom: var(--space-xl);
+}

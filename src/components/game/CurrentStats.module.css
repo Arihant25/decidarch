@@ -1,0 +1,180 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--line);
+}
+
+.header::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  flex-shrink: 0;
+}
+
+.list {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+}
+
+.attrName {
+  color: var(--paper);
+  text-transform: uppercase;
+}
+
+.statTotal {
+  font-weight: 700;
+}
+
+.statPositive {
+  color: var(--mint);
+}
+
+.statNegative {
+  color: var(--red);
+}
+
+.previewContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* --- Decision-impact animations --- */
+
+.scoreWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.deltaBadge {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  padding: 0.08rem 0.32rem;
+  border-radius: 2px;
+  animation: deltaIn 2.6s ease forwards;
+}
+
+.deltaUp {
+  color: var(--mint);
+  background: var(--mint-soft);
+  border: 1px solid var(--mint);
+}
+
+.deltaDown {
+  color: var(--red);
+  background: var(--red-soft);
+  border: 1px solid var(--red);
+}
+
+@keyframes deltaIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.8);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0) scale(1.12);
+  }
+  18% {
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.statPop {
+  display: inline-block;
+  animation: statPop 0.55s ease;
+}
+
+@keyframes statPop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.45);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.rowFlashUp {
+  animation: rowFlashUp 1.8s ease;
+}
+
+.rowFlashDown {
+  animation: rowFlashDown 1.8s ease;
+}
+
+@keyframes rowFlashUp {
+  0% {
+    background: color-mix(in srgb, var(--mint) 18%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes rowFlashDown {
+  0% {
+    background: color-mix(in srgb, var(--red) 18%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deltaBadge,
+  .statPop,
+  .rowFlashUp,
+  .rowFlashDown {
+    animation: none;
+  }
+}
+
+.oldScore {
+  color: var(--dim);
+  font-size: 0.55rem;
+}
+
+.arrow {
+  color: var(--faint);
+  font-size: 0.5rem;
+}

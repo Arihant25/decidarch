@@ -1,0 +1,154 @@
+/* Chat — field notes log */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-top: 1px solid var(--line);
+  transition: flex 0.3s ease;
+}
+
+.container.collapsed {
+  height: auto;
+  flex: none;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.header:hover {
+  background: rgba(141, 198, 255, 0.05);
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.headerTitle::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.toggleIcon {
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.empty {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+  text-align: center;
+  margin-top: var(--space-xl);
+}
+
+.systemMessage {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.575rem;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+  border-top: 1px dashed var(--line-dashed);
+  border-bottom: 1px dashed var(--line-dashed);
+  padding: 4px 12px;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.messageWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  max-width: 90%;
+}
+
+.myMessage {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.sender {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-left: 8px;
+}
+
+.myMessage .sender {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+.bubble {
+  background: rgba(141, 198, 255, 0.05);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--line-strong);
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.myMessage .bubble {
+  background: var(--cyan-soft);
+  border-color: rgba(84, 200, 255, 0.35);
+  border-left: 1px solid rgba(84, 200, 255, 0.35);
+  border-right: 2px solid var(--cyan);
+}
+
+.time {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--faint);
+  margin-left: 8px;
+}
+
+.myMessage .time {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+.inputArea {
+  padding: var(--space-md);
+  display: flex;
+  gap: var(--space-sm);
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+}
