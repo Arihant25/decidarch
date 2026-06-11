@@ -291,7 +291,7 @@ export default function Home() {
                   value={createName}
                   onChange={(e) => setCreateName(e.target.value)}
                   maxLength={20}
-                  autoFocus
+                  autoFocus={typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches}
                 />
               </div>
 
@@ -348,7 +348,7 @@ export default function Home() {
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                     maxLength={6}
-                    autoFocus
+                    autoFocus={typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches}
                   />
                 </div>
                 <div className={styles.field}>
