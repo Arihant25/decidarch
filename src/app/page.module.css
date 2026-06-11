@@ -1148,6 +1148,44 @@
 
 /* --------------- Reduced motion --------------- */
 
+@media (max-width: 600px) {
+  .page {
+    height: 100dvh;
+    min-height: unset;
+    overflow: hidden;
+  }
+
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 1.25rem 1rem 1rem;
+    gap: 1.5rem;
+    align-content: start;
+  }
+
+  .fan {
+    display: none;
+  }
+
+  .ticker {
+    display: none;
+  }
+
+  .titleBlock {
+    display: none;
+  }
+
+  .specs {
+    display: none;
+  }
+
+  .steps {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
 
   .page *,
