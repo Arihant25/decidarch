@@ -5,7 +5,7 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { IncomingMessage } from 'http';
 import { URL } from 'url';
-import { ClientMessage, ServerMessage } from './types';
+import { ClientMessage, ServerMessage, GameVersion, Impact } from './types';
 import {
   createRoom,
   joinRoom,
@@ -108,6 +108,41 @@ function handleJoin(ws: WebSocket, payload: { roomCode: string; playerName: stri
   }
 }
 
+function handleStartCountdown(ws: WebSocket) {
+  const conn = connections.get(ws);
+  if (!conn) return;
+
+  const state = getRoom(conn.roomCode);
+  if (!state) return;
+
+  const host = state.players.find((p) => p.id === conn.playerId);
+  if (!host?.isHost) {
+    sendTo(ws, { type: 'error', payload: { message: 'Only the host can start the game.' } });
+    return;
+  }
+
+  if (state.players.filter((p) => p.connected).length < 2) {
+    sendTo(ws, { type: 'error', payload: { message: 'Need at least 2 players to start.' } });
+    return;
+  }
+
+  const roomCode = conn.roomCode;
+
+  // Broadcast countdown to all players
+  broadcastToRoom(roomCode, { type: 'countdown', payload: { count: 3 } });
+  setTimeout(() => broadcastToRoom(roomCode, { type: 'countdown', payload: { count: 2 } }), 1000);
+  setTimeout(() => broadcastToRoom(roomCode, { type: 'countdown', payload: { count: 1 } }), 2000);
+  setTimeout(() => {
+    const currentState = getRoom(roomCode);
+    if (!currentState || currentState.phase !== 'lobby') return;
+    const gameState = createGame(roomCode, currentState.players, currentState.gameVersion);
+    updateRoom(roomCode, gameState);
+    const { state: withMsg } = addSystemMessage(gameState, 'Game started! Review the concern card and prepare your decision.');
+    updateRoom(roomCode, withMsg);
+    broadcastGameState(roomCode);
+  }, 3000);
+}
+
 function handleStartGame(ws: WebSocket) {
   const conn = connections.get(ws);
   if (!conn) return;
@@ -127,7 +162,7 @@ function handleStartGame(ws: WebSocket) {
     return;
   }
 
-  const gameState = createGame(conn.roomCode, state.players);
+  const gameState = createGame(conn.roomCode, state.players, state.gameVersion);
   updateRoom(conn.roomCode, gameState);
 
   const { state: withMsg } = addSystemMessage(gameState, 'Game started! Review the concern card and prepare your decision.');
@@ -173,7 +208,7 @@ function handleAdvancePhase(ws: WebSocket) {
   broadcastGameState(conn.roomCode);
 }
 
-function handleSubmitGroupDecision(ws: WebSocket, payload: { optionId: string; rationale: string }) {
+function handleSubmitGroupDecision(ws: WebSocket, payload: { optionId: string; rationale: string; valueImpacts?: Partial<Record<string, Impact>> }) {
   const conn = connections.get(ws);
   if (!conn) return;
 
@@ -187,7 +222,7 @@ function handleSubmitGroupDecision(ws: WebSocket, payload: { optionId: string; r
     return;
   }
 
-  const newState = submitGroupDecision(state, payload.optionId, payload.rationale);
+  const newState = submitGroupDecision(state, payload.optionId, payload.rationale, payload.valueImpacts);
   updateRoom(conn.roomCode, newState);
 
   // Add system message about the decision
@@ -210,11 +245,49 @@ function handleSelectGroupOption(ws: WebSocket, payload: { optionId: string | nu
   const state = getRoom(conn.roomCode);
   if (!state) return;
 
-  const host = state.players.find((p) => p.id === conn.playerId);
-  if (!host?.isHost) return; // Only host can select
-
+  // Any player can suggest an option selection
   state.hostSelectedOptionId = payload.optionId;
   updateRoom(conn.roomCode, state);
+  broadcastGameState(conn.roomCode);
+}
+
+function handleUpdateGroupDraft(
+  ws: WebSocket,
+  payload: { rationale?: string; valueImpacts?: Partial<Record<string, Impact>> }
+) {
+  const conn = connections.get(ws);
+  if (!conn) return;
+
+  const state = getRoom(conn.roomCode);
+  if (!state || state.phase !== 'group-decision') return;
+
+  const updated: typeof state = { ...state };
+  if (payload.rationale !== undefined) updated.groupDraftRationale = payload.rationale;
+  if (payload.valueImpacts !== undefined) updated.groupDraftValueImpacts = payload.valueImpacts;
+
+  updateRoom(conn.roomCode, updated);
+  broadcastGameState(conn.roomCode);
+}
+
+function handleUpdateRevisionDraft(
+  ws: WebSocket,
+  payload: { concernId?: string | null; optionId?: string | null; rationale?: string }
+) {
+  const conn = connections.get(ws);
+  if (!conn) return;
+
+  const state = getRoom(conn.roomCode);
+  if (!state || state.phase !== 'event-revision') return;
+
+  const host = state.players.find((p) => p.id === conn.playerId);
+  if (!host?.isHost) return;
+
+  const updated = { ...state };
+  if ('concernId' in payload) updated.revisionDraftConcernId = payload.concernId;
+  if ('optionId' in payload) updated.revisionDraftOptionId = payload.optionId;
+  if (payload.rationale !== undefined) updated.revisionDraftRationale = payload.rationale;
+
+  updateRoom(conn.roomCode, updated);
   broadcastGameState(conn.roomCode);
 }
 
@@ -334,9 +407,11 @@ export function setupWebSocket(wss: WebSocketServer) {
     const action = url.searchParams.get('action');
     const playerName = url.searchParams.get('name');
     const roomCode = url.searchParams.get('room');
+    const roomVersion = url.searchParams.get('version');
 
     if (action === 'create' && playerName) {
-      const { roomCode: newCode, playerId } = createRoom(playerName);
+      const safeVersion: GameVersion = roomVersion === 'ethics' ? 'ethics' : 'classic';
+      const { roomCode: newCode, playerId } = createRoom(playerName, safeVersion);
       const state = getRoom(newCode);
 
       const conn: ClientConnection = { ws, playerId, roomCode: newCode };
@@ -359,6 +434,9 @@ export function setupWebSocket(wss: WebSocketServer) {
           case 'join':
             handleJoin(ws, message.payload);
             break;
+          case 'start-countdown':
+            handleStartCountdown(ws);
+            break;
           case 'start-game':
             handleStartGame(ws);
             break;
@@ -374,11 +452,17 @@ export function setupWebSocket(wss: WebSocketServer) {
           case 'select-group-option':
             handleSelectGroupOption(ws, message.payload);
             break;
+          case 'update-group-draft':
+            handleUpdateGroupDraft(ws, message.payload);
+            break;
           case 'revise-decision':
             handleReviseDecision(ws, message.payload);
             break;
           case 'skip-revision':
             handleSkipRevision(ws);
+            break;
+          case 'update-revision-draft':
+            handleUpdateRevisionDraft(ws, message.payload);
             break;
           case 'chat-message':
             handleChatMessage(ws, message.payload);

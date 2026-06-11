@@ -1,8 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import Link from 'next/link';
 import { CARD_DATA } from '@/lib/cardData';
+import { ETHICS_CARD_DATA } from '@/lib/cardDataEthics';
+import { ConcernCard, EthicsConcernCard } from '@/lib/types';
 import { PhaseIndicator } from './PhaseIndicator';
 import { ProjectCard } from './ProjectCard';
 import { StakeholderPanel } from './StakeholderPanel';
@@ -20,16 +23,27 @@ import styles from './GameBoard.module.css';
 
 export function GameBoard() {
   const { gameState } = useGame();
+  // Decision log and chat share the right sidebar; only one is expanded at a time
+  const [expandedPanel, setExpandedPanel] = useState<'chat' | 'log' | 'none'>('chat');
 
+  const gameEnded = gameState?.phase === 'scoring' || gameState?.phase === 'finished';
   const { formatted, isExpired, percentage } = useCountdown(
     gameState?.timerDuration ?? 0,
-    gameState?.startedAt
+    gameState?.startedAt,
+    gameEnded
   );
 
   if (!gameState) return null;
 
+  const isEthics = gameState.gameVersion === 'ethics';
   const currentConcernId = gameState.concernOrder[gameState.currentConcernIndex];
-  const currentConcern = CARD_DATA.concerns.find((c) => c.id === currentConcernId);
+  const currentConcern: ConcernCard | EthicsConcernCard | null = isEthics
+    ? (ETHICS_CARD_DATA.concerns.find((c) => c.id === currentConcernId) ?? null)
+    : (CARD_DATA.concerns.find((c) => c.id === currentConcernId) ?? null);
+
+  const project = isEthics ? ETHICS_CARD_DATA.project : CARD_DATA.project;
+  const stakeholders = isEthics ? undefined : CARD_DATA.stakeholders;
+  const ethicsStakeholders = isEthics ? ETHICS_CARD_DATA.stakeholders : undefined;
 
   const renderPhase = () => {
     switch (gameState.phase) {
@@ -87,12 +101,15 @@ export function GameBoard() {
         </span>
       </header>
 
-      {/* Timer progress bar */}
+      {/* Game progress bar — width = cards completed, colour = phase timer urgency */}
       <div className={styles.timerBar}>
         <div
           className={styles.timerBarFill}
           style={{
-            width: `${Math.min(percentage, 100)}%`,
+            width: `${gameState.phase === 'scoring' || gameState.phase === 'finished'
+              ? 100
+              : (gameState.currentConcernIndex / gameState.concernOrder.length) * 100
+              }%`,
             background:
               percentage >= 100
                 ? 'var(--red)'
@@ -107,19 +124,34 @@ export function GameBoard() {
       <div className={styles.mainArea}>
         {/* Left sidebar */}
         <aside className={styles.sidebar}>
-          <ProjectCard project={CARD_DATA.project} />
-          <StakeholderPanel stakeholders={CARD_DATA.stakeholders} />
+          <ProjectCard project={project} />
+          <StakeholderPanel stakeholders={stakeholders} ethicsStakeholders={ethicsStakeholders} />
           <PlayerList />
         </aside>
 
-        {/* Center content */}
-        <main className={styles.center}>{renderPhase()}</main>
+        {/* Center content — keyed so each phase change replays the enter animation */}
+        <main
+          key={`${gameState.currentConcernIndex}-${gameState.phase}`}
+          className={styles.center}
+        >
+          {renderPhase()}
+        </main>
 
         {/* Right sidebar */}
         <aside className={styles.rightSidebar}>
           <CurrentStats />
-          <CardHistory />
-          <ChatPanel />
+          <CardHistory
+            isCollapsed={expandedPanel !== 'log'}
+            onToggle={() =>
+              setExpandedPanel((prev) => (prev === 'log' ? 'none' : 'log'))
+            }
+          />
+          <ChatPanel
+            isCollapsed={expandedPanel !== 'chat'}
+            onToggle={() =>
+              setExpandedPanel((prev) => (prev === 'chat' ? 'none' : 'chat'))
+            }
+          />
         </aside>
       </div>
     </div>

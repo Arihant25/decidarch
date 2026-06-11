@@ -1,16 +1,21 @@
 // ============================================================
-// DecidArch V2 — Game Engine (Pure State Machine)
+// DecidArch — Game Engine (Pure State Machine)
 // ============================================================
 
 import {
   GameState,
   GamePhase,
+  GameVersion,
   Player,
   PlayerDecision,
   GroupDecision,
   ChatMessage,
+  Impact,
+  EthicsConcernCard,
+  EthicsEventCard,
 } from './types';
 import { CARD_DATA } from './cardData';
+import { ETHICS_CARD_DATA } from './cardDataEthics';
 
 // --------------- Helpers ---------------
 
@@ -26,9 +31,14 @@ function shuffle<T>(array: T[]): T[] {
 
 // --------------- Game Creation ---------------
 
-export function createGame(roomCode: string, players: Player[]): GameState {
-  const shuffledConcerns = shuffle(CARD_DATA.concerns.map((c) => c.id));
-  const shuffledEvents = shuffle(CARD_DATA.events.map((e) => e.id));
+export function createGame(
+  roomCode: string,
+  players: Player[],
+  gameVersion: GameVersion = 'classic'
+): GameState {
+  const cardData = gameVersion === 'ethics' ? ETHICS_CARD_DATA : CARD_DATA;
+  const shuffledConcerns = shuffle(cardData.concerns.map((c) => c.id));
+  const shuffledEvents = shuffle(cardData.events.map((e) => e.id));
 
   return {
     roomCode,
@@ -45,6 +55,8 @@ export function createGame(roomCode: string, players: Player[]): GameState {
     chatMessages: [],
     startedAt: Date.now(),
     timerDuration: 45 * 60, // 45 minutes
+    gameVersion,
+    stakeholderVImportanceOverrides: {},
   };
 }
 
@@ -55,9 +67,19 @@ export function getCurrentConcern(state: GameState) {
   return CARD_DATA.concerns.find((c) => c.id === id) || null;
 }
 
+export function getCurrentEthicsConcern(state: GameState): EthicsConcernCard | null {
+  const id = state.concernOrder[state.currentConcernIndex];
+  return ETHICS_CARD_DATA.concerns.find((c) => c.id === id) || null;
+}
+
 export function getCurrentEvent(state: GameState) {
   if (!state.activeEventId) return null;
   return CARD_DATA.events.find((e) => e.id === state.activeEventId) || null;
+}
+
+export function getCurrentEthicsEvent(state: GameState): EthicsEventCard | null {
+  if (!state.activeEventId) return null;
+  return ETHICS_CARD_DATA.events.find((e) => e.id === state.activeEventId) || null;
 }
 
 export function allDecisionsSubmitted(state: GameState): boolean {
@@ -77,6 +99,9 @@ export function isGameOver(state: GameState): boolean {
 }
 
 export function isOptionDisabled(state: GameState, optionId: string): boolean {
+  // Ethics mode has no fixed design options
+  if (state.gameVersion === 'ethics') return false;
+
   const drawnEvents = state.drawnEventIndices.map((i) => state.eventOrder[i]);
 
   if (drawnEvents.includes('event-fire')) {
@@ -137,23 +162,37 @@ export function advanceToGroupDecision(state: GameState): GameState {
 export function submitGroupDecision(
   state: GameState,
   optionId: string,
-  rationale: string
+  rationale: string,
+  valueImpacts?: Partial<Record<string, Impact>>
 ): GameState {
   if (state.phase !== 'group-decision') return state;
 
-  const concern = getCurrentConcern(state);
-  if (!concern) return state;
+  let decision: GroupDecision;
 
-  const option = concern.designOptions.find((o) => o.id === optionId);
-  if (!option) return state;
-
-  const decision: GroupDecision = {
-    concernId: concern.id,
-    concernTitle: concern.title,
-    optionId,
-    optionName: option.name,
-    rationale,
-  };
+  if (state.gameVersion === 'ethics') {
+    const concern = getCurrentEthicsConcern(state);
+    if (!concern) return state;
+    decision = {
+      concernId: concern.id,
+      concernTitle: concern.title,
+      optionId: '',
+      optionName: rationale.length > 60 ? rationale.slice(0, 57) + '...' : rationale,
+      rationale,
+      valueImpacts,
+    };
+  } else {
+    const concern = getCurrentConcern(state);
+    if (!concern) return state;
+    const option = concern.designOptions.find((o) => o.id === optionId);
+    if (!option) return state;
+    decision = {
+      concernId: concern.id,
+      concernTitle: concern.title,
+      optionId,
+      optionName: option.name,
+      rationale,
+    };
+  }
 
   const newGroupDecisions = [...state.groupDecisions, decision];
   const newConcernIndex = state.currentConcernIndex + 1;
@@ -170,6 +209,8 @@ export function submitGroupDecision(
         individualDecisions: {},
         activeEventId: eventId,
         hostSelectedOptionId: null,
+        groupDraftRationale: undefined,
+        groupDraftValueImpacts: undefined,
         drawnEventIndices: [...state.drawnEventIndices, eventIndex],
         phase: 'event',
         currentRound: state.currentRound + 1,
@@ -185,6 +226,8 @@ export function submitGroupDecision(
       currentConcernIndex: newConcernIndex,
       individualDecisions: {},
       hostSelectedOptionId: null,
+      groupDraftRationale: undefined,
+      groupDraftValueImpacts: undefined,
       phase: 'scoring',
     };
   }
@@ -196,13 +239,37 @@ export function submitGroupDecision(
     currentConcernIndex: newConcernIndex,
     individualDecisions: {},
     hostSelectedOptionId: null,
+    groupDraftRationale: undefined,
+    groupDraftValueImpacts: undefined,
     phase: 'individual-prep',
   };
 }
 
 export function advanceToEventRevision(state: GameState): GameState {
   if (state.phase !== 'event') return state;
+  if (state.gameVersion === 'ethics') {
+    // Ethics mode: apply V-importance change and skip the revision phase
+    return advanceAfterEvent(applyEthicsEvent(state));
+  }
   return { ...state, phase: 'event-revision' };
+}
+
+/** Apply an ethics event's V-importance override to game state */
+function applyEthicsEvent(state: GameState): GameState {
+  if (!state.activeEventId) return state;
+  const event = ETHICS_CARD_DATA.events.find((e) => e.id === state.activeEventId);
+  if (!event) return state;
+
+  return {
+    ...state,
+    stakeholderVImportanceOverrides: {
+      ...state.stakeholderVImportanceOverrides,
+      [event.stakeholderId]: {
+        ...(state.stakeholderVImportanceOverrides[event.stakeholderId] ?? {}),
+        [event.affectedValue]: event.newImportance,
+      },
+    },
+  };
 }
 
 export function reviseDecision(
@@ -223,7 +290,7 @@ export function reviseDecision(
     if (d.concernId === concernId) {
       return {
         ...d,
-        originalOptionId: d.optionId,
+        originalOptionId: d.originalOptionId ?? d.optionId,
         optionId: newOptionId,
         optionName: option.name,
         rationale,
@@ -233,10 +300,15 @@ export function reviseDecision(
     return d;
   });
 
-  return advanceAfterEvent({
+  // Stay in event-revision so the host can make additional revisions.
+  // The phase advances only when skipRevision() is called.
+  return {
     ...state,
     groupDecisions: newGroupDecisions,
-  });
+    revisionDraftConcernId: null,
+    revisionDraftOptionId: null,
+    revisionDraftRationale: undefined,
+  };
 }
 
 export function skipRevision(state: GameState): GameState {

@@ -35,11 +35,9 @@
 
 .cellFiller {
   flex: 1;
-  background-image: repeating-linear-gradient(
-    -45deg,
-    transparent 0 10px,
-    rgba(141, 198, 255, 0.06) 10px 11px
-  );
+  background-image: repeating-linear-gradient(-45deg,
+      transparent 0 10px,
+      rgba(141, 198, 255, 0.06) 10px 11px);
 }
 
 .logoCell {
@@ -97,7 +95,7 @@
 
 .timerBarFill {
   height: 100%;
-  transition: width 1s linear, background 2s ease;
+  transition: width 0.6s ease, background 2s ease;
 }
 
 /* --------------- Main area --------------- */
@@ -126,6 +124,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  animation: fadeInUp 0.45s var(--ease-draft) both;
 }
 
 .rightSidebar {

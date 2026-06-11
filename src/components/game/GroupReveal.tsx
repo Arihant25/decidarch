@@ -1,11 +1,11 @@
 'use client';
 
 import { useGame } from '@/context/GameContext';
-import { ConcernCard } from '@/lib/types';
+import { ConcernCard, EthicsConcernCard } from '@/lib/types';
 import styles from './GroupReveal.module.css';
 
 interface Props {
-  concern: ConcernCard;
+  concern: ConcernCard | EthicsConcernCard;
 }
 
 export function GroupReveal({ concern }: Props) {
@@ -13,9 +13,13 @@ export function GroupReveal({ concern }: Props) {
 
   if (!gameState) return null;
 
+  const isEthics = gameState.gameVersion === 'ethics';
   const decisions = Object.values(gameState.individualDecisions);
-  const getOptionName = (optionId: string) =>
-    concern.designOptions.find((o) => o.id === optionId)?.name || 'Unknown Option';
+
+  const getOptionName = (optionId: string) => {
+    if (isEthics) return null; // ethics uses rationale directly
+    return (concern as ConcernCard).designOptions.find((o) => o.id === optionId)?.name || 'Unknown Option';
+  };
 
   return (
     <div className={styles.container}>
@@ -34,7 +38,7 @@ export function GroupReveal({ concern }: Props) {
         {decisions.map((decision, idx) => (
           <div
             key={decision.playerId}
-            className={`${styles.decisionCard} animate-fade-in-up`}
+            className={styles.decisionCard}
             style={{ animationDelay: `${idx * 150}ms` }}
           >
             <div className={styles.cardHeader}>
@@ -50,14 +54,19 @@ export function GroupReveal({ concern }: Props) {
             </div>
 
             <div className={styles.chosenOption}>
-              <span className={styles.optionLabel}>SUGGESTED</span>
-              <span className={styles.optionName}>{getOptionName(decision.optionId)}</span>
+              <span className={styles.optionLabel}>{isEthics ? 'SAFEGUARD PROPOSAL' : 'SUGGESTED'}</span>
+              {isEthics
+                ? <p className={styles.rationaleText} style={{ margin: 0 }}>{decision.rationale}</p>
+                : <span className={styles.optionName}>{getOptionName(decision.optionId)}</span>
+              }
             </div>
 
-            <div className={styles.rationaleBox}>
-              <span className={styles.rationaleLabel}>RATIONALE</span>
-              <p className={styles.rationaleText}>&ldquo;{decision.rationale}&rdquo;</p>
-            </div>
+            {!isEthics && (
+              <div className={styles.rationaleBox}>
+                <span className={styles.rationaleLabel}>RATIONALE</span>
+                <p className={styles.rationaleText}>&ldquo;{decision.rationale}&rdquo;</p>
+              </div>
+            )}
           </div>
         ))}
       </div>

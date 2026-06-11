@@ -2,7 +2,7 @@
 // DecidArch V2 — Room Manager (In-Memory)
 // ============================================================
 
-import { GameState, Player } from './types';
+import { GameState, Player, GameVersion } from './types';
 import { customAlphabet } from 'nanoid';
 
 const generateCode = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 6);
@@ -27,7 +27,7 @@ setInterval(() => {
   }
 }, 60_000); // check every minute
 
-export function createRoom(hostName: string): { roomCode: string; playerId: string } {
+export function createRoom(hostName: string, gameVersion: GameVersion = 'classic'): { roomCode: string; playerId: string } {
   let roomCode = generateCode();
   // Ensure uniqueness
   while (rooms.has(roomCode)) {
@@ -56,6 +56,8 @@ export function createRoom(hostName: string): { roomCode: string; playerId: stri
     groupDecisions: [],
     chatMessages: [],
     timerDuration: 45 * 60,
+    gameVersion,
+    stakeholderVImportanceOverrides: {},
   };
 
   rooms.set(roomCode, { state, lastActivity: Date.now() });

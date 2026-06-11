@@ -4,6 +4,17 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { GameVersion } from '@/lib/types';
+
+const CS_SCIENTISTS = [
+  'Alan Turing', 'Ada Lovelace', 'Grace Hopper', 'Donald Knuth',
+  'John von Neumann', 'Edsger Dijkstra', 'Barbara Liskov', 'Linus Torvalds',
+  'Dennis Ritchie', 'Ken Thompson', 'Tim Berners-Lee', 'Vint Cerf',
+  'Bjarne Stroustrup', 'Guido van Rossum', 'James Gosling', 'Brendan Eich',
+  'Margaret Hamilton', 'Frances Allen', 'Lynn Conway', 'Tony Hoare',
+  'Leslie Lamport', 'Niklaus Wirth', 'David Patterson', 'John Hennessy',
+  'Fran Allen', 'Peter Naur', 'Robin Milner', 'Dana Scott',
+];
 
 const QUALITY_ATTRIBUTES = [
   'USABILITY',
@@ -76,9 +87,12 @@ export default function Home() {
   const router = useRouter();
   const fanRef = useRef<HTMLDivElement>(null);
   const [createName, setCreateName] = useState('');
+  const [gameMode, setGameMode] = useState<GameVersion>('classic');
   const [joinName, setJoinName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [activeTab, setActiveTab] = useState<'create' | 'join'>('create');
+  const [createPlaceholder] = useState(() => `e.g. ${CS_SCIENTISTS[Math.floor(Math.random() * CS_SCIENTISTS.length)]}`);
+  const [joinPlaceholder] = useState(() => `e.g. ${CS_SCIENTISTS[Math.floor(Math.random() * CS_SCIENTISTS.length)]}`);
   const [savedSession] = useState<{ roomCode: string; playerName: string } | null>(() => {
     if (typeof window === 'undefined') return null;
     try {
@@ -86,7 +100,7 @@ export default function Home() {
       if (saved) {
         const data = JSON.parse(saved);
         if (data.roomCode && data.playerName && data.roomCode !== 'NEW') {
-          return data;
+          return data as { roomCode: string; playerName: string };
         }
       }
     } catch {
@@ -98,7 +112,7 @@ export default function Home() {
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!createName.trim()) return;
-    router.push(`/room/new?name=${encodeURIComponent(createName.trim())}`);
+    router.push(`/room/new?name=${encodeURIComponent(createName.trim())}&version=${gameMode}`);
   };
 
   const handleJoin = (e: React.FormEvent) => {
@@ -138,7 +152,6 @@ export default function Home() {
         <span className={styles.topbarCellWide} aria-hidden="true" />
         <Link href="/rules" className={styles.topbarLink}>HOW TO PLAY</Link>
         <span className={styles.topbarCell}>SCALE — NTS</span>
-        <span className={styles.topbarCellAccent}>REV 2.0</span>
       </header>
 
       <main className={styles.main}>
@@ -153,8 +166,8 @@ export default function Home() {
             <span className={styles.titleSolid}>DECID</span>
             <span className={styles.titleRow}>
               <span className={styles.titleOutline}>ARCH</span>
-              <span className={styles.stamp} aria-label="Revision 2.0">
-                REV<br />2.0
+              <span className={styles.stamp} aria-label="Multiplayer">
+                ONLINE
               </span>
             </span>
           </h1>
@@ -183,7 +196,7 @@ export default function Home() {
           <ul className={styles.specs}>
             <li><b>PLAYERS</b>2–8 architects</li>
             <li><b>DURATION</b>30–45 min</li>
-            <li><b>MODE</b>realtime · multiplayer</li>
+            <li><b>MODE</b>realtime multiplayer</li>
           </ul>
 
           {/* Interactive card fan */}
@@ -274,12 +287,37 @@ export default function Home() {
                   id="create-name"
                   type="text"
                   className={styles.input}
-                  placeholder="e.g. Ada Lovelace"
+                  placeholder={createPlaceholder}
                   value={createName}
                   onChange={(e) => setCreateName(e.target.value)}
                   maxLength={20}
                   autoFocus
                 />
+              </div>
+
+              {/* Game mode selector */}
+              <div className={styles.field}>
+                <p className={styles.label}>GAME MODE</p>
+                <div className={styles.modeTiles}>
+                  <button
+                    type="button"
+                    className={`${styles.modeTile} ${gameMode === 'classic' ? styles.modeTileActive : ''}`}
+                    onClick={() => setGameMode('classic')}
+                    id="mode-classic"
+                  >
+                    <span className={styles.modeTileName}>Classic</span>
+                    <span className={styles.modeTileDesc}>Architecture<br />QA Trade-offs</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.modeTile} ${gameMode === 'ethics' ? styles.modeTileActive : ''}`}
+                    onClick={() => setGameMode('ethics')}
+                    id="mode-ethics"
+                  >
+                    <span className={styles.modeTileName}>Ethics-Aware</span>
+                    <span className={styles.modeTileDesc}>Ethical Values<br />in Software</span>
+                  </button>
+                </div>
               </div>
               <button
                 type="submit"
@@ -321,7 +359,7 @@ export default function Home() {
                     id="join-name"
                     type="text"
                     className={styles.input}
-                    placeholder="e.g. Grace Hopper"
+                    placeholder={joinPlaceholder}
                     value={joinName}
                     onChange={(e) => setJoinName(e.target.value)}
                     maxLength={20}

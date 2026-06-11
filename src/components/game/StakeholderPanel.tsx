@@ -2,19 +2,21 @@
 
 import { useGame } from '@/context/GameContext';
 import { calculateScores } from '@/lib/scoring';
-import { StakeholderCard } from '@/lib/types';
+import { StakeholderCard, EthicsStakeholderCard } from '@/lib/types';
 import { useScoreDeltas } from '@/hooks/useScoreDeltas';
 import styles from './StakeholderPanel.module.css';
 
 interface Props {
-  stakeholders: StakeholderCard[];
+  stakeholders?: StakeholderCard[];
+  ethicsStakeholders?: EthicsStakeholderCard[];
 }
 
-export function StakeholderPanel({ stakeholders }: Props) {
+export function StakeholderPanel({ stakeholders, ethicsStakeholders }: Props) {
   const { gameState } = useGame();
 
+  // ---- Classic mode: QA-score-backed panel ----
   let scoresMap: Record<string, number> = {};
-  if (gameState) {
+  if (gameState && gameState.gameVersion === 'classic') {
     const score = calculateScores(gameState);
     scoresMap = score.qaScores.reduce((acc, qs) => {
       acc[qs.attribute] = qs.score;
@@ -23,6 +25,46 @@ export function StakeholderPanel({ stakeholders }: Props) {
   }
 
   const { deltas, wave } = useScoreDeltas(scoresMap);
+
+  // ---- Ethics mode ----
+  if (gameState?.gameVersion === 'ethics' && ethicsStakeholders) {
+    return (
+      <div className={styles.panel}>
+        <h3 className={styles.heading}>Stakeholders</h3>
+        {ethicsStakeholders.map((s) => {
+          // Apply any V-importance event overrides for display
+          const effectiveValues = s.values.map((v) => ({
+            ...v,
+            importance: gameState.stakeholderVImportanceOverrides[s.id]?.[v.name] ?? v.importance,
+          }));
+
+          return (
+            <div key={s.id} className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div className={styles.nameRow}>
+                  <span className={styles.name}>{s.name ?? s.category.split('(')[0].trim()}</span>
+                </div>
+                <span className={styles.role}>{s.category}</span>
+              </div>
+              <div className={styles.priorities}>
+                {effectiveValues.map((v) => (
+                  <div key={v.name} className={styles.priority}>
+                    <span className={styles.attrName}>{v.name}</span>
+                    <span className={styles.attrValue}>
+                      V-imp: <strong>{v.importance}</strong>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // ---- Classic mode ----
+  if (!stakeholders) return null;
 
   return (
     <div className={styles.panel}>
@@ -33,7 +75,6 @@ export function StakeholderPanel({ stakeholders }: Props) {
           return curr >= p.importance;
         });
 
-        // Net effect of the latest decision on this stakeholder's priorities
         const reaction = s.priorities.reduce(
           (sum, p) => sum + (deltas[p.attribute] ?? 0),
           0
@@ -42,16 +83,14 @@ export function StakeholderPanel({ stakeholders }: Props) {
         return (
           <div
             key={s.id}
-            className={`${styles.card} ${
-              reaction > 0 ? styles.cardCheer : reaction < 0 ? styles.cardGrumble : ''
-            }`}
+            className={`${styles.card} ${reaction > 0 ? styles.cardCheer : reaction < 0 ? styles.cardGrumble : ''
+              }`}
           >
             {reaction !== 0 && (
               <span
                 key={`r-${wave}`}
-                className={`${styles.reaction} ${
-                  reaction > 0 ? styles.reactionUp : styles.reactionDown
-                }`}
+                className={`${styles.reaction} ${reaction > 0 ? styles.reactionUp : styles.reactionDown
+                  }`}
               >
                 {reaction > 0 ? '😊' : '😠'} {reaction > 0 ? `+${reaction}` : reaction}
               </span>
@@ -68,29 +107,29 @@ export function StakeholderPanel({ stakeholders }: Props) {
               </div>
               <span className={styles.role}>{s.role}</span>
             </div>
-          <p className={styles.description}>{s.description}</p>
-          <div className={styles.priorities}>
-            {s.priorities.map((p) => {
-              const pd = deltas[p.attribute] ?? 0;
-              return (
-                <div key={p.attribute} className={styles.priority}>
-                  <span className={styles.attrName}>{p.attribute}</span>
-                  <span className={styles.attrValue}>
-                    {pd !== 0 && (
-                      <span
-                        key={`pd-${wave}`}
-                        className={pd > 0 ? styles.prioUp : styles.prioDown}
-                      >
-                        {pd > 0 ? `▲+${pd}` : `▼${pd}`}
-                      </span>
-                    )}{' '}
-                    QA-Priority: <strong>{p.importance}</strong>
-                  </span>
-                </div>
-              );
-            })}
+            <p className={styles.description}>{s.description}</p>
+            <div className={styles.priorities}>
+              {s.priorities.map((p) => {
+                const pd = deltas[p.attribute] ?? 0;
+                return (
+                  <div key={p.attribute} className={styles.priority}>
+                    <span className={styles.attrName}>{p.attribute}</span>
+                    <span className={styles.attrValue}>
+                      {pd !== 0 && (
+                        <span
+                          key={`pd-${wave}`}
+                          className={pd > 0 ? styles.prioUp : styles.prioDown}
+                        >
+                          {pd > 0 ? `▲+${pd}` : `▼${pd}`}
+                        </span>
+                      )}{' '}
+                      QA-Priority: <strong>{p.importance}</strong>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
         );
       })}
     </div>

@@ -1,6 +1,10 @@
 // ============================================================
-// DecidArch V2 — Shared Type Definitions
+// DecidArch — Shared Type Definitions
 // ============================================================
+
+// --------------- Game Version ---------------
+
+export type GameVersion = 'classic' | 'ethics';
 
 // --------------- Quality Attributes ---------------
 
@@ -73,6 +77,61 @@ export interface ProjectCard {
   context: string;
 }
 
+// --------------- Ethics Card Types (V3) ---------------
+
+export interface EthicsValue {
+  name: string;
+  importance: number;
+}
+
+export interface EthicsStakeholderCard {
+  id: string;
+  category: string;
+  name?: string;
+  description: string;
+  goal: string;
+  values: EthicsValue[];
+}
+
+export interface EthicsValueCard {
+  id: string;
+  valueName: string;
+  definition: string;
+}
+
+export interface EthicsConcernCard {
+  id: string;
+  title: string;
+  description: string;
+  safeguardHint: string;
+  affectedValues: string[];
+}
+
+export interface EthicsEventCard {
+  id: string;
+  title: string;
+  description: string;
+  consequence: string;
+  stakeholderId: string;
+  affectedValue: string;
+  newImportance: number;
+}
+
+export interface EthicsProjectCard {
+  title: string;
+  description: string;
+  context: string;
+  purpose: string;
+}
+
+export interface EthicsCardData {
+  project: EthicsProjectCard;
+  stakeholders: EthicsStakeholderCard[];
+  ethicalValues: EthicsValueCard[];
+  concerns: EthicsConcernCard[];
+  events: EthicsEventCard[];
+}
+
 // --------------- Game State ---------------
 
 export type GamePhase =
@@ -101,6 +160,8 @@ export interface GroupDecision {
   rationale: string;
   revisedByEvent?: string;
   originalOptionId?: string;
+  /** Ethics mode: host-rated impact per ethical value */
+  valueImpacts?: Partial<Record<string, Impact>>;
 }
 
 export interface ChatMessage {
@@ -136,24 +197,38 @@ export interface GameState {
   timerDuration: number; // in seconds
   activeEventId?: string;
   hostSelectedOptionId?: string | null;
+  gameVersion: GameVersion;
+  /** Ethics mode: event-driven overrides to stakeholder V-importance values */
+  stakeholderVImportanceOverrides: Record<string, Record<string, number>>;
+  /** Live shared draft for group decision phase */
+  groupDraftRationale?: string;
+  groupDraftValueImpacts?: Partial<Record<string, Impact>>;
+  /** Live revision draft — host's current selection during event-revision phase */
+  revisionDraftConcernId?: string | null;
+  revisionDraftOptionId?: string | null;
+  revisionDraftRationale?: string;
 }
 
 // --------------- WebSocket Messages ---------------
 
 export type ClientMessage =
   | { type: 'join'; payload: { roomCode: string; playerName: string } }
+  | { type: 'start-countdown'; payload: Record<string, never> }
   | { type: 'start-game'; payload: Record<string, never> }
   | { type: 'submit-decision'; payload: { optionId: string; rationale: string } }
-  | { type: 'submit-group-decision'; payload: { optionId: string; rationale: string } }
+  | { type: 'submit-group-decision'; payload: { optionId: string; rationale: string; valueImpacts?: Partial<Record<string, Impact>> } }
   | { type: 'select-group-option'; payload: { optionId: string | null } }
+  | { type: 'update-group-draft'; payload: { rationale?: string; valueImpacts?: Partial<Record<string, Impact>> } }
   | { type: 'advance-phase'; payload: Record<string, never> }
   | { type: 'revise-decision'; payload: { concernId: string; optionId: string; rationale: string } }
   | { type: 'skip-revision'; payload: Record<string, never> }
+  | { type: 'update-revision-draft'; payload: { concernId?: string | null; optionId?: string | null; rationale?: string } }
   | { type: 'chat-message'; payload: { text: string } }
   | { type: 'kick-player'; payload: { playerId: string } };
 
 export type ServerMessage =
   | { type: 'game-state'; payload: GameState }
+  | { type: 'countdown'; payload: { count: number } }
   | { type: 'error'; payload: { message: string } }
   | { type: 'player-joined'; payload: { player: Player } }
   | { type: 'player-left'; payload: { playerId: string } }

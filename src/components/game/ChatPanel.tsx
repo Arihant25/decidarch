@@ -4,15 +4,21 @@ import { useState, useRef, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import styles from './ChatPanel.module.css';
 
-export function ChatPanel() {
+interface ChatPanelProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+}
+
+export function ChatPanel({ isCollapsed, onToggle }: ChatPanelProps) {
   const { gameState, playerId, sendChat } = useGame();
   const [text, setText] = useState('');
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [gameState?.chatMessages]);
+    if (isCollapsed) return;
+    const el = messagesRef.current;
+    el?.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  }, [gameState?.chatMessages, isCollapsed]);
 
   if (!gameState) return null;
 
@@ -32,7 +38,7 @@ export function ChatPanel() {
     <div className={`${styles.container} ${isCollapsed ? styles.collapsed : ''}`}>
       <button
         className={styles.header}
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        onClick={onToggle}
         aria-expanded={!isCollapsed}
       >
         <div className={styles.headerTitle}>
@@ -43,9 +49,9 @@ export function ChatPanel() {
         </div>
       </button>
 
-      {!isCollapsed && (
-        <>
-          <div className={styles.messages}>
+      <div className={styles.body}>
+        <div className={styles.bodyInner}>
+          <div className={styles.messages} ref={messagesRef}>
             {gameState.chatMessages.length === 0 ? (
               <div className={styles.empty}>{'// no entries yet'}</div>
             ) : (
@@ -71,7 +77,6 @@ export function ChatPanel() {
                 );
               })
             )}
-            <div ref={messagesEndRef} />
           </div>
 
           <form onSubmit={handleSubmit} className={styles.inputArea}>
@@ -87,8 +92,8 @@ export function ChatPanel() {
               Send
             </button>
           </form>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

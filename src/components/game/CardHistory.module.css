@@ -3,15 +3,34 @@
 .container {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  transition: flex-grow 0.3s ease;
+}
+
+.container.collapsed {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.3s ease;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
+.collapsed .body {
+  grid-template-rows: 0fr;
+}
+
 .header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
   font-family: var(--font-mono);
   font-size: 0.6rem;
   font-weight: 600;
@@ -21,9 +40,26 @@
   padding: var(--space-md);
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
 }
 
-.header::before {
+.header:hover {
+  background: rgba(141, 198, 255, 0.05);
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.headerTitle::before {
   content: '';
   width: 6px;
   height: 6px;
@@ -31,13 +67,27 @@
   flex-shrink: 0;
 }
 
+.toggleIcon {
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+
 .list {
-  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--space-md);
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  visibility: visible;
+  transition: visibility 0s linear, padding 0.3s ease;
+}
+
+.collapsed .list {
+  visibility: hidden;
+  padding-top: 0;
+  padding-bottom: 0;
+  transition: visibility 0s linear 0.3s, padding 0.3s ease;
 }
 
 .empty {

@@ -1,16 +1,108 @@
 'use client';
 
+import { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import Link from 'next/link';
-import { calculateScores } from '@/lib/scoring';
+import { calculateScores, calculateEthicsScore } from '@/lib/scoring';
+import { generateStory } from '@/lib/storyGenerator';
+import { ProjectStory } from './ProjectStory';
 import styles from './ScoreBoard.module.css';
 
 export function ScoreBoard() {
   const { gameState } = useGame();
+  const [durationMs] = useState<number | undefined>(() =>
+    gameState != null && gameState.startedAt != null ? Date.now() - gameState.startedAt : undefined
+  );
 
   if (!gameState) return null;
 
+  // ---- Ethics mode scoreboard ----
+  if (gameState.gameVersion === 'ethics') {
+    const score = calculateEthicsScore(gameState);
+
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <p className={styles.formLabel}>FORM D-4 · ETHICS REFLECTION</p>
+          <h2 className={styles.title}>Ethics Review Complete</h2>
+          <p className={styles.scoreLine}>
+            REFLECTION SCORE — <strong>{score.finalScore}</strong>
+          </p>
+          <span
+            className={`${styles.gradeStamp} ${score.finalScore < 0 ? styles.gradeLost : styles.gradeWin}`}
+            aria-label={`Grade ${score.grade}`}
+          >
+            {score.grade.split(' ').map((w, i) => <span key={i}>{w}<br /></span>)}
+          </span>
+          <p style={{ fontSize: '0.72rem', opacity: 0.55, marginTop: '0.5rem' }}>
+            Note: This score is a digital approximation. The physical game uses qualitative reflection.
+          </p>
+        </div>
+
+        <div className={styles.grid}>
+          <div className={styles.section}>
+            <h3><i>01</i> STAKEHOLDER CONTRIBUTIONS</h3>
+            <p className={styles.helpText}>V-importance × safeguard impact per value</p>
+            <div className={styles.stakeholders}>
+              {score.stakeholderScores.map((s) => (
+                <div key={s.stakeholderId} className={styles.stakeholderCard}>
+                  <div className={styles.shHeader}>
+                    <h4>{s.name ?? s.category.split('(')[0].trim()}</h4>
+                    <span className={s.totalContribution >= 0 ? styles.shSatisfied : styles.shUnsatisfied}>
+                      {s.totalContribution >= 0 ? 'POSITIVE' : 'NEGATIVE'}
+                    </span>
+                  </div>
+                  <div className={styles.shDetails}>
+                    {s.valueScores.map((v) => (
+                      <div key={v.valueName} className={styles.shRow}>
+                        <span>{v.valueName}</span>
+                        <div className={styles.shNumbers}>
+                          <span>V-IMP {v.importance}</span>
+                          <span>IMPACT {v.totalImpact > 0 ? `+${v.totalImpact}` : v.totalImpact}</span>
+                          <span className={v.contribution >= 0 ? styles.satPlus : styles.satMinus}>
+                            {v.contribution > 0 ? `+${v.contribution}` : v.contribution}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className={styles.shTotal}>
+                    CONTRIBUTION — <strong>{s.totalContribution > 0 ? `+${s.totalContribution}` : s.totalContribution}</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.finalCalc}>
+          <h3><i>02</i> FINAL CALCULATION</h3>
+          <div className={styles.calcRow}>
+            <span>Total Stakeholder Contribution</span>
+            <span>{score.finalScore}</span>
+          </div>
+          <div className={styles.calcRow}>
+            <span>Unaddressed Concerns</span>
+            <span className={styles.calcMinus}>-{score.unaddressedConcerns} (not penalised in ethics mode)</span>
+          </div>
+          <div className={styles.calcTotal}>
+            <span>REFLECTION SCORE</span>
+            <span>{score.finalScore}</span>
+          </div>
+        </div>
+
+        <div className={styles.footer}>
+          <Link href="/" className="btn btn-primary btn-lg">
+            Return to Home <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Classic mode scoreboard ----
   const score = calculateScores(gameState);
+  const story = generateStory(gameState);
 
   return (
     <div className={styles.container}>
@@ -34,6 +126,13 @@ export function ScoreBoard() {
           {score.grade}
         </span>
       </div>
+
+      {story && (
+        <ProjectStory
+          story={story}
+          durationMs={durationMs}
+        />
+      )}
 
       {score.lost && score.loss && (
         <div className={styles.lossReason}>

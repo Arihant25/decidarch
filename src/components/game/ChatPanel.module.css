@@ -3,14 +3,42 @@
 .container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
   border-top: 1px solid var(--line);
-  transition: flex 0.3s ease;
+  transition: flex-grow 0.3s ease;
 }
 
 .container.collapsed {
-  height: auto;
-  flex: none;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.3s ease;
+  flex: 1;
+  min-height: 0;
+}
+
+.collapsed .body {
+  grid-template-rows: 0fr;
+}
+
+.bodyInner {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  visibility: visible;
+  transition: visibility 0s linear;
+}
+
+.collapsed .bodyInner {
+  visibility: hidden;
+  transition: visibility 0s linear 0.3s;
 }
 
 .header {
@@ -60,6 +88,7 @@
 
 .messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--space-md);
   display: flex;

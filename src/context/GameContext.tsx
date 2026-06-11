@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
-import { GameState, ServerMessage, Player } from '@/lib/types';
+import { GameState, ServerMessage, Player, GameVersion, Impact } from '@/lib/types';
 import { useSocket } from '@/hooks/useSocket';
 
 interface GameContextValue {
@@ -14,13 +14,15 @@ interface GameContextValue {
   isHost: boolean;
   currentPlayer: Player | null;
   previewDeltas: Record<string, number> | null;
+  countdown: number | null;
 
   // Actions
-  createRoom: (playerName: string) => void;
+  createRoom: (playerName: string, gameVersion?: GameVersion) => void;
   joinRoom: (roomCode: string, playerName: string) => void;
   startGame: () => void;
+  startCountdown: () => void;
   submitDecision: (optionId: string, rationale: string) => void;
-  submitGroupDecision: (optionId: string, rationale: string) => void;
+  submitGroupDecision: (optionId: string, rationale: string, valueImpacts?: Partial<Record<string, Impact>>) => void;
   selectGroupOption: (optionId: string | null) => void;
   advancePhase: () => void;
   reviseDecision: (concernId: string, optionId: string, rationale: string) => void;
@@ -30,6 +32,8 @@ interface GameContextValue {
   clearError: () => void;
   disconnect: () => void;
   setPreviewDeltas: (deltas: Record<string, number> | null) => void;
+  updateGroupDraft: (draft: { rationale?: string; valueImpacts?: Partial<Record<string, import('@/lib/types').Impact>> }) => void;
+  updateRevisionDraft: (draft: { concernId?: string | null; optionId?: string | null; rationale?: string }) => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -46,12 +50,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewDeltas, setPreviewDeltas] = useState<Record<string, number> | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
-  // Use refs for stable callback references
-  const gameStateRef = useRef(gameState);
-  useEffect(() => {
-    gameStateRef.current = gameState;
-  });
+  // Ref so handleMessage can call disconnect() without a stale closure
+  const disconnectRef = useRef<(() => void) | null>(null);
 
   const handleMessage = useCallback((message: ServerMessage) => {
     switch (message.type) {
@@ -79,39 +81,43 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         setError(null);
         break;
 
+      case 'countdown':
+        setCountdown(message.payload.count);
+        break;
+
       case 'game-state':
         setGameState(message.payload);
+        setCountdown(null);
+        if (message.payload.phase === 'finished' && typeof window !== 'undefined') {
+          localStorage.removeItem('decidarch_session');
+        }
         break;
 
       case 'player-joined': {
-        const current = gameStateRef.current;
-        if (current) {
-          const exists = current.players.some((p) => p.id === message.payload.player.id);
-          if (!exists) {
-            setGameState({
-              ...current,
-              players: [...current.players, message.payload.player],
-            });
-          }
-        }
+        setGameState((current) => {
+          if (!current) return current;
+          if (current.players.some((p) => p.id === message.payload.player.id)) return current;
+          return { ...current, players: [...current.players, message.payload.player] };
+        });
         break;
       }
 
       case 'player-left': {
-        const current = gameStateRef.current;
-        if (current) {
-          setGameState({
+        setGameState((current) => {
+          if (!current) return current;
+          return {
             ...current,
             players: current.players.map((p) =>
               p.id === message.payload.playerId ? { ...p, connected: false } : p
             ),
-          });
-        }
+          };
+        });
         break;
       }
 
       case 'player-kicked':
-        // If we were kicked
+        // Prevent auto-reconnect before clearing state
+        disconnectRef.current?.();
         setGameState(null);
         setPlayerId(null);
         setRoomCode(null);
@@ -119,17 +125,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         break;
 
       case 'chat-message': {
-        const current = gameStateRef.current;
-        if (current) {
-          // Don't add duplicate messages
-          const exists = current.chatMessages.some((m) => m.id === message.payload.id);
-          if (!exists) {
-            setGameState({
-              ...current,
-              chatMessages: [...current.chatMessages, message.payload],
-            });
-          }
-        }
+        setGameState((current) => {
+          if (!current) return current;
+          if (current.chatMessages.some((m) => m.id === message.payload.id)) return current;
+          return { ...current, chatMessages: [...current.chatMessages, message.payload] };
+        });
         break;
       }
 
@@ -143,13 +143,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     onMessage: handleMessage,
   });
 
+  // Keep ref in sync so handleMessage can call disconnect()
+  useEffect(() => {
+    disconnectRef.current = disconnect;
+  }, [disconnect]);
+
   const createRoom = useCallback(
-    (playerName: string) => {
+    (playerName: string, gameVersion: GameVersion = 'classic') => {
       setError(null);
       if (typeof window !== 'undefined') {
         localStorage.setItem('decidarch_session', JSON.stringify({ roomCode: 'NEW', playerName }));
       }
-      connect({ action: 'create', name: playerName });
+      connect({ action: 'create', name: playerName, version: gameVersion });
     },
     [connect]
   );
@@ -170,6 +175,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     send({ type: 'start-game', payload: {} });
   }, [send]);
 
+  const startCountdown = useCallback(() => {
+    send({ type: 'start-countdown', payload: {} });
+  }, [send]);
+
   const submitDecision = useCallback(
     (optionId: string, rationale: string) => {
       send({ type: 'submit-decision', payload: { optionId, rationale } });
@@ -178,8 +187,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   );
 
   const submitGroupDecision = useCallback(
-    (optionId: string, rationale: string) => {
-      send({ type: 'submit-group-decision', payload: { optionId, rationale } });
+    (optionId: string, rationale: string, valueImpacts?: Partial<Record<string, Impact>>) => {
+      send({ type: 'submit-group-decision', payload: { optionId, rationale, valueImpacts } });
     },
     [send]
   );
@@ -220,6 +229,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     [send]
   );
 
+  const updateGroupDraft = useCallback(
+    (draft: { rationale?: string; valueImpacts?: Partial<Record<string, Impact>> }) => {
+      send({ type: 'update-group-draft', payload: draft });
+    },
+    [send]
+  );
+
+  const updateRevisionDraft = useCallback(
+    (draft: { concernId?: string | null; optionId?: string | null; rationale?: string }) => {
+      send({ type: 'update-revision-draft', payload: draft });
+    },
+    [send]
+  );
+
   const clearError = useCallback(() => setError(null), []);
 
   const isHost = gameState?.players.find((p) => p.id === playerId)?.isHost ?? false;
@@ -236,9 +259,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         isHost,
         currentPlayer,
         previewDeltas,
+        countdown,
         createRoom,
         joinRoom,
         startGame,
+        startCountdown,
         submitDecision,
         submitGroupDecision,
         selectGroupOption,
@@ -250,6 +275,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         clearError,
         disconnect,
         setPreviewDeltas,
+        updateGroupDraft,
+        updateRevisionDraft,
       }}
     >
       {children}

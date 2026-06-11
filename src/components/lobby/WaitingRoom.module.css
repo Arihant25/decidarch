@@ -47,10 +47,25 @@
   width: 100%;
 }
 
-.cropTL { top: -10px; left: -10px; }
-.cropTR { top: -10px; right: -10px; }
-.cropBL { bottom: -10px; left: -10px; }
-.cropBR { bottom: -10px; right: -10px; }
+.cropTL {
+  top: -10px;
+  left: -10px;
+}
+
+.cropTR {
+  top: -10px;
+  right: -10px;
+}
+
+.cropBL {
+  bottom: -10px;
+  left: -10px;
+}
+
+.cropBR {
+  bottom: -10px;
+  right: -10px;
+}
 
 /* --------------- Header --------------- */
 
@@ -96,6 +111,17 @@
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.1;
+}
+
+.modeBadge {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--cyan, #54c8ff);
+  border: 1px solid rgba(84, 200, 255, 0.35);
+  padding: 0.2rem 0.55rem;
 }
 
 /* --------------- Room Code --------------- */
@@ -144,7 +170,8 @@
   font-size: clamp(1.75rem, 7vw, 2.5rem);
   font-weight: 700;
   letter-spacing: 0.35em;
-  margin-right: -0.35em; /* compensate trailing tracking */
+  margin-right: -0.35em;
+  /* compensate trailing tracking */
   color: var(--cyan);
 }
 
@@ -398,4 +425,64 @@
 
 .dot:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+/* Countdown overlay (shown to non-host players) */
+.countdownOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 10, 20, 0.82);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  animation: fadeIn 0.2s ease both;
+}
+
+.countdownCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 3.5rem;
+  background: rgba(8, 19, 35, 0.92);
+  border: 1px solid var(--line);
+}
+
+.countdownLabel {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.countdownNumber {
+  font-size: 6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+  animation: countdownPop 0.35s var(--ease-draft) both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes countdownPop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

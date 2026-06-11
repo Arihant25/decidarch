@@ -19,6 +19,7 @@
 
 import { GameState, QualityAttribute, IMPACT_VALUES, Impact } from './types';
 import { CARD_DATA } from './cardData';
+import { ETHICS_CARD_DATA } from './cardDataEthics';
 
 export interface QAScoreEntry {
   attribute: QualityAttribute;
@@ -204,5 +205,94 @@ export function calculateScores(state: GameState): GameScore {
     lost,
     loss,
     grade,
+  };
+}
+
+// ============================================================
+// Ethics-Aware Score Calculation (V3)
+// ============================================================
+//
+// For each group decision the host rated value impacts (++/+/-/--).
+// Score = Σ over all decisions of: Σ over affected values of:
+//   V-importance (possibly overridden by event) × impact_value
+//
+// Grades (digital approximation — the physical game is qualitative):
+//   < 0:   Reflection Needed
+//   0–14:  Sufficient
+//   15–29: Good
+//   30–44: Very Good
+//   45+:   Excellent
+// ============================================================
+
+export interface EthicsValueScore {
+  valueName: string;
+  importance: number;
+  totalImpact: number;
+  contribution: number;
+}
+
+export interface EthicsStakeholderScore {
+  stakeholderId: string;
+  category: string;
+  name?: string;
+  valueScores: EthicsValueScore[];
+  totalContribution: number;
+}
+
+export interface EthicsScore {
+  stakeholderScores: EthicsStakeholderScore[];
+  finalScore: number;
+  grade: string;
+  unaddressedConcerns: number;
+  totalConcerns: number;
+}
+
+export function calculateEthicsScore(state: GameState): EthicsScore {
+  const { stakeholders, concerns } = ETHICS_CARD_DATA;
+
+  const getVImportance = (stakeholderId: string, valueName: string, baseImportance: number): number =>
+    state.stakeholderVImportanceOverrides[stakeholderId]?.[valueName] ?? baseImportance;
+
+  const stakeholderScores: EthicsStakeholderScore[] = stakeholders.map((stakeholder) => {
+    const valueScores: EthicsValueScore[] = stakeholder.values.map(({ name: valueName, importance: baseImportance }) => {
+      const importance = getVImportance(stakeholder.id, valueName, baseImportance);
+
+      let totalImpact = 0;
+      for (const decision of state.groupDecisions) {
+        const impact = decision.valueImpacts?.[valueName] as Impact | undefined;
+        if (impact) {
+          totalImpact += IMPACT_VALUES[impact];
+        }
+      }
+
+      return { valueName, importance, totalImpact, contribution: importance * totalImpact };
+    });
+
+    const totalContribution = valueScores.reduce((sum, v) => sum + v.contribution, 0);
+    return {
+      stakeholderId: stakeholder.id,
+      category: stakeholder.category,
+      name: stakeholder.name,
+      valueScores,
+      totalContribution,
+    };
+  });
+
+  const finalScore = stakeholderScores.reduce((sum, s) => sum + s.totalContribution, 0);
+  const unaddressedConcerns = concerns.length - state.groupDecisions.length;
+
+  let grade: string;
+  if (finalScore < 0) grade = 'Reflection Needed';
+  else if (finalScore >= 45) grade = 'Excellent';
+  else if (finalScore >= 30) grade = 'Very Good';
+  else if (finalScore >= 15) grade = 'Good';
+  else grade = 'Sufficient';
+
+  return {
+    stakeholderScores,
+    finalScore,
+    grade,
+    unaddressedConcerns,
+    totalConcerns: concerns.length,
   };
 }

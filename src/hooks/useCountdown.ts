@@ -2,10 +2,18 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export function useCountdown(durationSeconds: number, startedAt?: number) {
+export function useCountdown(durationSeconds: number, startedAt?: number, stopped?: boolean) {
   const [elapsed, setElapsed] = useState(0);
   const [isExpired, setIsExpired] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Freeze the timer when stopped
+  useEffect(() => {
+    if (stopped && intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [stopped]);
 
   useEffect(() => {
     if (intervalRef.current) {
@@ -13,7 +21,7 @@ export function useCountdown(durationSeconds: number, startedAt?: number) {
       intervalRef.current = null;
     }
 
-    if (!startedAt) return;
+    if (!startedAt || stopped) return;
 
     const update = () => {
       const currentElapsed = Math.floor((Date.now() - startedAt) / 1000);
@@ -27,7 +35,7 @@ export function useCountdown(durationSeconds: number, startedAt?: number) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [durationSeconds, startedAt]);
+  }, [durationSeconds, startedAt, stopped]);
 
   const formatTime = useCallback((seconds: number) => {
     const m = Math.floor(seconds / 60);

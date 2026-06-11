@@ -7,7 +7,7 @@ import { Check, Copy, UserPlus, X } from 'lucide-react';
 import styles from './WaitingRoom.module.css';
 
 export function WaitingRoom() {
-  const { gameState, roomCode, isHost, startGame, kickPlayer, playerId } = useGame();
+  const { gameState, roomCode, isHost, startCountdown, kickPlayer, playerId, countdown } = useGame();
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
@@ -68,6 +68,9 @@ export function WaitingRoom() {
           </Link>
           <p className={styles.formLabel}>FORM B-2 · ASSEMBLY ROSTER</p>
           <h1 className={styles.title}>Waiting Room</h1>
+          <span className={styles.modeBadge}>
+            MODE — {gameState.gameVersion === 'ethics' ? 'ETHICS-AWARE' : 'CLASSIC'}
+          </span>
         </div>
 
         {/* Room Code */}
@@ -152,18 +155,7 @@ export function WaitingRoom() {
               </div>
             ))}
 
-            {/* Empty slots */}
-            {Array.from({ length: gameState.maxPlayers - gameState.players.length }).map(
-              (_, i) => (
-                <div key={`empty-${i}`} className={styles.emptySlot}>
-                  <span className={styles.playerIndex}>
-                    {String(gameState.players.length + i + 1).padStart(2, '0')}
-                  </span>
-                  <div className={styles.emptyAvatar} />
-                  <span className={styles.emptyText}>AWAITING ARCHITECT…</span>
-                </div>
-              )
-            )}
+
           </div>
         </div>
 
@@ -172,14 +164,16 @@ export function WaitingRoom() {
           <div className={styles.startSection}>
             <button
               className={`btn btn-primary btn-lg ${styles.startBtn}`}
-              onClick={startGame}
-              disabled={!canStart}
+              onClick={startCountdown}
+              disabled={!canStart || countdown !== null}
               id="btn-start-game"
             >
-              {canStart
-                ? `Begin Drafting (${connectedCount} architects)`
-                : 'Need at least 2 architects'}
-              <span aria-hidden="true">→</span>
+              {countdown !== null
+                ? `Starting in ${countdown}…`
+                : canStart
+                  ? `Begin Drafting (${connectedCount} architects)`
+                  : 'Need at least 2 architects'}
+              {countdown === null && <span aria-hidden="true">→</span>}
             </button>
           </div>
         )}
@@ -195,6 +189,16 @@ export function WaitingRoom() {
           </div>
         )}
       </div>
+
+      {/* Countdown overlay shown to all non-host players */}
+      {!isHost && countdown !== null && (
+        <div className={styles.countdownOverlay} role="dialog" aria-modal="true" aria-label="Game starting">
+          <div className={styles.countdownCard}>
+            <p className={styles.countdownLabel}>GAME STARTING IN</p>
+            <span className={styles.countdownNumber}>{countdown}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

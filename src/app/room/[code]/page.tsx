@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { GameProvider, useGame } from '@/context/GameContext';
 import { WaitingRoom } from '@/components/lobby/WaitingRoom';
 import { GameBoard } from '@/components/game/GameBoard';
+import { GameVersion } from '@/lib/types';
+import { EVENT_CARDS } from '@/lib/cardData';
 import styles from './page.module.css';
 
 function RoomContent() {
@@ -14,6 +16,7 @@ function RoomContent() {
   const router = useRouter();
   const code = (params.code as string)?.toUpperCase();
   const initialName = searchParams.get('name') || '';
+  const initialVersion = searchParams.get('version') as GameVersion | null;
   const [name] = useState(() => {
     if (initialName) return initialName;
     if (typeof window === 'undefined') return '';
@@ -40,7 +43,8 @@ function RoomContent() {
 
     if (name) {
       if (code === 'NEW') {
-        createRoom(name);
+        const version: GameVersion = initialVersion === 'ethics' ? 'ethics' : 'classic';
+        createRoom(name, version);
       } else if (code) {
         joinRoom(code, name);
       }
@@ -59,6 +63,18 @@ function RoomContent() {
       localStorage.removeItem('decidarch_session');
     }
   }, [error]);
+
+  const currentPhase = gameState?.phase;
+  useEffect(() => {
+    if (currentPhase && currentPhase !== 'lobby') {
+      EVENT_CARDS.forEach((card) => {
+        if (card.imageUrl) {
+          const img = new Image();
+          img.src = card.imageUrl;
+        }
+      });
+    }
+  }, [currentPhase]);
 
   if (!name) {
     if (code === 'NEW') {
@@ -123,21 +139,31 @@ function RoomContent() {
   }
 
   if (error && !gameState) {
+    const isKicked = error === 'You have been removed from the game.' || error?.includes('Room not found');
     return (
       <div className={styles.errorPage}>
         <div className={styles.errorCard}>
           <p className={styles.cardLabel}>FORM E-2 · SITE INCIDENT</p>
           <h2 className={`${styles.cardTitle} ${styles.cardTitleError}`}>
-            Something Went Wrong
+            Whoops.
           </h2>
           <p className={styles.cardText}>{error}</p>
           <div className={styles.actions}>
             <Link href="/" className="btn btn-primary">
               Back to Home
             </Link>
-            <button className="btn btn-secondary" onClick={clearError}>
-              Try Again
-            </button>
+            {!isKicked && (
+              <button
+                className="btn btn-secondary"
+                onClick={
+                  error === 'Game already in progress.'
+                    ? () => window.location.reload()
+                    : clearError
+                }
+              >
+                Try Again
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -1,0 +1,161 @@
+/* ============================================================
+   DecidArch V2 — 404: Blueprint Not Found
+   ============================================================ */
+
+.page {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-sans);
+    overflow: hidden;
+}
+
+/* --------------- Background --------------- */
+
+.grid {
+    position: absolute;
+    inset: -130px;
+    background-image:
+        linear-gradient(var(--gridline) 1px, transparent 1px),
+        linear-gradient(90deg, var(--gridline) 1px, transparent 1px),
+        linear-gradient(var(--gridline-major) 1px, transparent 1px),
+        linear-gradient(90deg, var(--gridline-major) 1px, transparent 1px);
+    background-size:
+        26px 26px,
+        26px 26px,
+        130px 130px,
+        130px 130px;
+    animation: gridDrift 120s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes gridDrift {
+    to {
+        transform: translate(130px, 130px);
+    }
+}
+
+.vignette {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 90% 70% at 30% 20%, rgba(84, 200, 255, 0.06), transparent 60%),
+        radial-gradient(ellipse 120% 90% at 50% 110%, rgba(2, 6, 14, 0.85), transparent 60%);
+    pointer-events: none;
+}
+
+/* --------------- Content --------------- */
+
+.content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-lg);
+    text-align: center;
+    padding: var(--space-2xl) var(--space-xl);
+}
+
+.stamp {
+    font-family: var(--font-mono);
+    font-size: clamp(6rem, 20vw, 12rem);
+    font-weight: 700;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--red);
+    text-stroke: 2px var(--red);
+    text-shadow:
+        0 0 40px var(--red-glow),
+        0 0 80px rgba(255, 92, 56, 0.1);
+    letter-spacing: -0.05em;
+    animation: flicker 6s ease-in-out infinite;
+}
+
+@keyframes flicker {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    92% {
+        opacity: 1;
+    }
+
+    93% {
+        opacity: 0.6;
+    }
+
+    94% {
+        opacity: 1;
+    }
+
+    96% {
+        opacity: 0.7;
+    }
+
+    97% {
+        opacity: 1;
+    }
+}
+
+.divider {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+}
+
+.heading {
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    color: var(--paper);
+    margin: 0;
+}
+
+.subheading {
+    font-size: var(--text-lg);
+    color: var(--dim);
+    margin: 0;
+    max-width: 36ch;
+}
+
+/* --------------- Button --------------- */
+
+.homeBtn {
+    margin-top: var(--space-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 0.75rem 1.75rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: rgba(84, 200, 255, 0.06);
+    color: var(--cyan);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition:
+        background var(--transition-base),
+        border-color var(--transition-base),
+        color var(--transition-base),
+        box-shadow var(--transition-base);
+}
+
+.homeBtn::before {
+    content: '←';
+}
+
+.homeBtn:hover {
+    background: rgba(84, 200, 255, 0.12);
+    border-color: var(--cyan);
+    color: var(--paper);
+    box-shadow: 0 0 20px var(--cyan-glow);
+}

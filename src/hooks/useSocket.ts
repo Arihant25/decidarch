@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { ServerMessage, ClientMessage } from '@/lib/types';
+import { ServerMessage, ClientMessage, GameVersion } from '@/lib/types';
 
 interface UseSocketOptions {
   onMessage?: (message: ServerMessage) => void;
@@ -15,10 +15,10 @@ export function useSocket(options: UseSocketOptions = {}) {
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const [isConnected, setIsConnected] = useState(false);
-  const connectRef = useRef<((params: { action: string; name: string; room?: string }) => void) | null>(null);
+  const connectRef = useRef<((params: { action: string; name: string; room?: string; version?: GameVersion }) => void) | null>(null);
 
   const connect = useCallback(
-    (params: { action: string; name: string; room?: string }) => {
+    (params: { action: string; name: string; room?: string; version?: GameVersion }) => {
       // Clean up existing connection
       if (wsRef.current) {
         wsRef.current.close();
@@ -29,6 +29,7 @@ export function useSocket(options: UseSocketOptions = {}) {
         action: params.action,
         name: params.name,
         ...(params.room && { room: params.room }),
+        ...(params.version && { version: params.version }),
       });
       const url = `${protocol}//${window.location.host}/ws?${query}`;
 
@@ -69,7 +70,8 @@ export function useSocket(options: UseSocketOptions = {}) {
       };
 
       ws.onerror = (error) => {
-        console.error('[WS] Error:', error);
+        const message = (error as ErrorEvent).message;
+        console.error('[WS] Error:', message ?? `type=${error.type}, url=${ws.url}`);
         options.onError?.(error);
       };
     },

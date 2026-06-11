@@ -3,17 +3,29 @@
 import { useGame } from '@/context/GameContext';
 import styles from './CardHistory.module.css';
 
-export function CardHistory() {
+interface CardHistoryProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+}
+
+export function CardHistory({ isCollapsed, onToggle }: CardHistoryProps) {
   const { gameState } = useGame();
 
   if (!gameState) return null;
 
+  const isEthics = gameState.gameVersion === 'ethics';
   const decisions = gameState.groupDecisions;
 
   return (
-    <div className={styles.container}>
-      <h3 className={styles.header}>Decision Log</h3>
+    <div className={`${styles.container} ${isCollapsed ? styles.collapsed : ''}`}>
+      <button className={styles.header} onClick={onToggle} aria-expanded={!isCollapsed}>
+        <span className={styles.headerTitle}>
+          {isEthics ? 'Safeguard Log' : 'Decision Log'}
+        </span>
+        <span className={styles.toggleIcon}>{isCollapsed ? '+' : '−'}</span>
+      </button>
 
+      <div className={styles.body}>
       <div className={styles.list}>
         {decisions.length === 0 ? (
           <div className={styles.empty}>{'// no decisions filed yet'}</div>
@@ -32,7 +44,7 @@ export function CardHistory() {
 
               <div className={styles.decisionDetails}>
                 <div className={styles.optionRow}>
-                  <span className={styles.label}>CHOSEN</span>
+                  <span className={styles.label}>{isEthics ? 'SAFEGUARD' : 'CHOSEN'}</span>
                   <span className={styles.value}>{decision.optionName}</span>
                 </div>
               </div>
@@ -40,6 +52,8 @@ export function CardHistory() {
           ))
         )}
       </div>
+      </div>
     </div>
   );
 }
+

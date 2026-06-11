@@ -38,11 +38,9 @@
   left: 0;
   right: 0;
   height: 8px;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--red) 0 12px,
-    transparent 12px 24px
-  );
+  background: repeating-linear-gradient(-45deg,
+      var(--red) 0 12px,
+      transparent 12px 24px);
   opacity: 0.85;
 }
 
@@ -408,4 +406,191 @@
   border: 1px dashed var(--gold);
   background: var(--gold-soft);
   margin-bottom: var(--space-xl);
+}
+
+.observingBadge {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  opacity: 0.8;
+  font-weight: normal;
+}
+
+/* --------------- Dramatic reveal --------------- */
+
+/* Stage 1: incoming-alert klaxon screen (click to skip) */
+.alertScreen {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  background: linear-gradient(165deg, #1c0f10 0%, #120a10 60%, #0b1a30 130%);
+  border: 1px solid var(--red);
+  overflow: hidden;
+  cursor: pointer;
+  font: inherit;
+  animation: alertThrob 1.1s ease-in-out infinite;
+}
+
+@keyframes alertThrob {
+  0%, 100% { box-shadow: 0 0 24px -12px var(--red-glow); }
+  50% {
+    box-shadow:
+      0 0 56px -8px var(--red-glow),
+      inset 0 0 48px rgba(255, 92, 56, 0.08);
+  }
+}
+
+/* scanline sweeping down the alert screen */
+.alertScreen::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 92, 56, 0.14),
+    transparent
+  );
+  pointer-events: none;
+  animation: scanSweep 1.4s linear infinite;
+}
+
+@keyframes scanSweep {
+  from { top: -80px; }
+  to { top: 100%; }
+}
+
+.alertStrip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--red) 0 12px,
+    transparent 12px 24px
+  );
+  opacity: 0.85;
+  animation: stripeScroll 0.9s linear infinite;
+}
+
+.alertStripTop { top: 0; }
+.alertStripBottom { bottom: 0; transform: scaleX(-1); }
+
+/* 33.94px = one diagonal stripe period, so the loop is seamless */
+@keyframes stripeScroll {
+  to { background-position: 33.94px 0; }
+}
+
+.alertIcon {
+  display: flex;
+  color: var(--red);
+  filter: drop-shadow(0 0 12px var(--red-glow));
+  animation: alertBlink 0.55s step-end infinite;
+}
+
+.alertTitle {
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 3.2vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--red);
+  text-shadow: 0 0 18px var(--red-glow);
+  animation: alertBlink 1.1s step-end infinite;
+}
+
+.alertSub {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  color: var(--faint);
+}
+
+@keyframes alertBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* Stage 2: card slams in oversized, lands with a shake */
+.cardSlam {
+  animation: cardSlam 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cardSlam {
+  0% { opacity: 0; transform: scale(1.5) rotate(1.5deg); filter: blur(10px); }
+  45% { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0); }
+  55% { transform: translate(-6px, 3px); }
+  65% { transform: translate(5px, -3px); }
+  78% { transform: translate(-3px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* red shockwave washing out as the card lands */
+.impactFlash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 92, 56, 0.45),
+    transparent 72%
+  );
+  pointer-events: none;
+  animation: impactFlash 0.55s ease-out 0.3s both;
+}
+
+@keyframes impactFlash {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* card content materializes after the slam */
+.staggerIn {
+  opacity: 0;
+  animation: contentIn 0.45s ease-out both;
+}
+
+.s1 { animation-delay: 0.45s; }
+.s2 { animation-delay: 0.6s; }
+.s3 { animation-delay: 0.78s; }
+
+@keyframes contentIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.actionsIn {
+  animation: contentIn 0.5s ease-out 0.95s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alertScreen,
+  .alertScreen::after,
+  .alertStrip,
+  .alertIcon,
+  .alertTitle,
+  .cardSlam,
+  .impactFlash,
+  .staggerIn,
+  .actionsIn {
+    animation: none;
+  }
+
+  .staggerIn,
+  .actionsIn {
+    opacity: 1;
+  }
+
+  .impactFlash {
+    opacity: 0;
+  }
 }
