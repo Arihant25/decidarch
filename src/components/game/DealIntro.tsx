@@ -32,46 +32,55 @@ function jitter(seed: number) {
 }
 
 /**
- * Synthesized card-deal sounds: one filtered noise "swish" per card, scheduled
- * on the audio clock to match the deal stagger. Returns the context so the
- * caller can close it (skip/unmount). Silently no-ops if audio is unavailable
- * or autoplay is blocked (e.g. page refresh with no user gesture yet).
+ * Creates and resumes an AudioContext eagerly so it is warm by the time the
+ * first sound needs to play. Silently no-ops if audio is unavailable or
+ * autoplay is blocked (e.g. page refresh with no user gesture yet).
  */
-function playDealSounds(count: number, stagger: number): AudioContext | null {
+function createAudioContext(): AudioContext | null {
   if (typeof window === 'undefined' || typeof AudioContext === 'undefined') return null;
   try {
     const ctx = new AudioContext();
-    const schedule = () => {
-      if (ctx.state !== 'running') return;
-      const noise = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 0.15), ctx.sampleRate);
-      const data = noise.getChannelData(0);
-      for (let s = 0; s < data.length; s++) data[s] = Math.random() * 2 - 1;
-
-      for (let i = 0; i < count; i++) {
-        const t = ctx.currentTime + 0.03 + i * stagger;
-        const src = ctx.createBufferSource();
-        src.buffer = noise;
-        src.playbackRate.value = 1 + jitter(i + 70) * 0.15;
-        const swish = ctx.createBiquadFilter();
-        swish.type = 'bandpass';
-        swish.Q.value = 0.8;
-        swish.frequency.setValueAtTime(2400, t);
-        swish.frequency.exponentialRampToValueAtTime(700, t + 0.12);
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.3, t + 0.015);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
-        src.connect(swish);
-        swish.connect(gain);
-        gain.connect(ctx.destination);
-        src.start(t);
-        src.stop(t + 0.16);
-      }
-    };
-    ctx.resume().then(schedule).catch(() => {});
+    ctx.resume().catch(() => { });
     return ctx;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Schedules one filtered noise "swish" per card on an already-warmed context,
+ * timed to match the deal stagger. Silently no-ops if the context is not yet
+ * running (e.g. autoplay blocked).
+ */
+function scheduleDealSounds(ctx: AudioContext | null, count: number, stagger: number): void {
+  if (!ctx || ctx.state !== 'running') return;
+  try {
+    const noise = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 0.15), ctx.sampleRate);
+    const data = noise.getChannelData(0);
+    for (let s = 0; s < data.length; s++) data[s] = Math.random() * 2 - 1;
+
+    for (let i = 0; i < count; i++) {
+      const t = ctx.currentTime + 0.03 + i * stagger;
+      const src = ctx.createBufferSource();
+      src.buffer = noise;
+      src.playbackRate.value = 1 + jitter(i + 70) * 0.15;
+      const swish = ctx.createBiquadFilter();
+      swish.type = 'bandpass';
+      swish.Q.value = 0.8;
+      swish.frequency.setValueAtTime(2400, t);
+      swish.frequency.exponentialRampToValueAtTime(700, t + 0.12);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.3, t + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+      src.connect(swish);
+      swish.connect(gain);
+      gain.connect(ctx.destination);
+      src.start(t);
+      src.stop(t + 0.16);
+    }
+  } catch {
+    /* audio unavailable */
   }
 }
 
@@ -182,12 +191,16 @@ export function DealIntro({ cardCount, roomCode, gameVersion, concern, onComplet
     if (doneRef.current) return;
     doneRef.current = true;
     timersRef.current.forEach(clearTimeout);
-    audioRef.current?.close().catch(() => {});
+    audioRef.current?.close().catch(() => { });
     audioRef.current = null;
     onComplete();
   };
 
   useEffect(() => {
+    // Pre-create and warm the audio context immediately so it is in the
+    // 'running' state well before the deal animation fires at dealAt ms.
+    audioRef.current = createAudioContext();
+
     const dealAt = 900;
     // Generous holds between phases so each beat has time to land
     const flipAt = dealAt + fanCount * DEAL_STAGGER * 1000 + 1150;
@@ -199,7 +212,7 @@ export function DealIntro({ cardCount, roomCode, gameVersion, concern, onComplet
     timersRef.current = [
       setTimeout(() => {
         setStep(STEP_DEAL);
-        audioRef.current = playDealSounds(fanCount, DEAL_STAGGER);
+        scheduleDealSounds(audioRef.current, fanCount, DEAL_STAGGER);
       }, dealAt),
       setTimeout(() => {
         setTarget(measureBoardCard());
@@ -218,7 +231,7 @@ export function DealIntro({ cardCount, roomCode, gameVersion, concern, onComplet
     ];
     return () => {
       timersRef.current.forEach(clearTimeout);
-      audioRef.current?.close().catch(() => {});
+      audioRef.current?.close().catch(() => { });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -315,76 +328,76 @@ export function DealIntro({ cardCount, roomCode, gameVersion, concern, onComplet
                     : { ...deckPose, width: cardW, height: cardH }
               : step >= STEP_GATHER
                 ? {
-                    x: (target?.x ?? 0) + jitter(i + 50) * 5,
-                    y: (target?.y ?? 0) + jitter(i + 60) * 5,
-                    rotate: jitter(i + 21) * 3,
-                    scale: 0.92,
-                  }
+                  x: (target?.x ?? 0) + jitter(i + 50) * 5,
+                  y: (target?.y ?? 0) + jitter(i + 60) * 5,
+                  rotate: jitter(i + 21) * 3,
+                  scale: 0.92,
+                }
                 : step >= STEP_DEAL
                   ? fanPose
                   : deckPose;
             return (
-            <motion.div
-              key={i}
-              className={styles.card}
-              style={{ zIndex: isHero && step >= STEP_FLIP ? 45 : 10 + i }}
-              initial={{ ...deckPose, ...(isHero ? { width: cardW, height: cardH } : {}) }}
-              animate={pose}
-              exit={
-                isHero
-                  // Pixel-aligned over the real panel — fade only, no shrink
-                  ? { opacity: 0, transition: { duration: 0.4, ease: 'easeIn' } }
-                  : { opacity: 0, scale: 0.96, transition: { duration: 0.35, ease: 'easeIn' } }
-              }
-              transition={{
-                delay: moveDelay,
-                x: { type: 'spring', stiffness: 160, damping: 17, delay: moveDelay },
-                y: { type: 'spring', stiffness: 110, damping: 15, delay: moveDelay },
-                rotate: { type: 'spring', stiffness: 130, damping: 13, delay: moveDelay },
-                scale: { duration: 0.3, delay: moveDelay },
-                width: { type: 'spring', stiffness: 170, damping: 23, delay: sizeDelay },
-                height: { type: 'spring', stiffness: 170, damping: 23, delay: sizeDelay },
-              }}
-            >
               <motion.div
-                className={styles.cardInner}
-                animate={{ rotateY: isHero && step >= STEP_FLIP ? 180 : 0 }}
-                transition={{ type: 'spring', stiffness: 210, damping: 20 }}
+                key={i}
+                className={styles.card}
+                style={{ zIndex: isHero && step >= STEP_FLIP ? 45 : 10 + i }}
+                initial={{ ...deckPose, ...(isHero ? { width: cardW, height: cardH } : {}) }}
+                animate={pose}
+                exit={
+                  isHero
+                    // Pixel-aligned over the real panel — fade only, no shrink
+                    ? { opacity: 0, transition: { duration: 0.4, ease: 'easeIn' } }
+                    : { opacity: 0, scale: 0.96, transition: { duration: 0.35, ease: 'easeIn' } }
+                }
+                transition={{
+                  delay: moveDelay,
+                  x: { type: 'spring', stiffness: 160, damping: 17, delay: moveDelay },
+                  y: { type: 'spring', stiffness: 110, damping: 15, delay: moveDelay },
+                  rotate: { type: 'spring', stiffness: 130, damping: 13, delay: moveDelay },
+                  scale: { duration: 0.3, delay: moveDelay },
+                  width: { type: 'spring', stiffness: 170, damping: 23, delay: sizeDelay },
+                  height: { type: 'spring', stiffness: 170, damping: 23, delay: sizeDelay },
+                }}
               >
-                <div className={styles.cardBack}>
-                  <CardBack />
-                </div>
-                {isHero && concern ? (
-                  /* The real active concern, styled like the board's sheet */
-                  <div className={`${styles.cardFace} ${styles.cardFaceConcern}`}>
-                    <span className={styles.cfHeader}>
-                      <i className={styles.cfTag}>{gameVersion === 'ethics' ? 'ETH' : 'CON'}</i>
-                      <i className={styles.cfKind}>
-                        {gameVersion === 'ethics' ? 'Ethical Concern' : 'Concern'}
-                      </i>
-                      <i className={styles.cfId}>{concernIdLabel}</i>
-                    </span>
-                    <strong className={styles.cfTitle}>{concern.title}</strong>
-                    <span className={styles.cfDesc}>{concern.description}</span>
+                <motion.div
+                  className={styles.cardInner}
+                  animate={{ rotateY: isHero && step >= STEP_FLIP ? 180 : 0 }}
+                  transition={{ type: 'spring', stiffness: 210, damping: 20 }}
+                >
+                  <div className={styles.cardBack}>
+                    <CardBack />
                   </div>
-                ) : (
-                  <div className={styles.cardFace}>
-                    <span className={styles.faceTopRow}>
-                      <span>SHEET</span>
-                      <span>{String(i + 1).padStart(2, '0')}/{String(cardCount).padStart(2, '0')}</span>
-                    </span>
-                    <span className={styles.faceNumber}>{String(i + 1).padStart(2, '0')}</span>
-                    <span className={styles.faceLabel}>{concernLabel}</span>
-                    <span className={styles.faceRedacted} aria-hidden="true">
-                      <i style={{ width: '82%' }} />
-                      <i style={{ width: '58%' }} />
-                      <i style={{ width: '70%' }} />
-                    </span>
-                    <span className={styles.faceHatch} aria-hidden="true" />
-                  </div>
-                )}
+                  {isHero && concern ? (
+                    /* The real active concern, styled like the board's sheet */
+                    <div className={`${styles.cardFace} ${styles.cardFaceConcern}`}>
+                      <span className={styles.cfHeader}>
+                        <i className={styles.cfTag}>{gameVersion === 'ethics' ? 'ETH' : 'CON'}</i>
+                        <i className={styles.cfKind}>
+                          {gameVersion === 'ethics' ? 'Ethical Concern' : 'Concern'}
+                        </i>
+                        <i className={styles.cfId}>{concernIdLabel}</i>
+                      </span>
+                      <strong className={styles.cfTitle}>{concern.title}</strong>
+                      <span className={styles.cfDesc}>{concern.description}</span>
+                    </div>
+                  ) : (
+                    <div className={styles.cardFace}>
+                      <span className={styles.faceTopRow}>
+                        <span>SHEET</span>
+                        <span>{String(i + 1).padStart(2, '0')}/{String(cardCount).padStart(2, '0')}</span>
+                      </span>
+                      <span className={styles.faceNumber}>{String(i + 1).padStart(2, '0')}</span>
+                      <span className={styles.faceLabel}>{concernLabel}</span>
+                      <span className={styles.faceRedacted} aria-hidden="true">
+                        <i style={{ width: '82%' }} />
+                        <i style={{ width: '58%' }} />
+                        <i style={{ width: '70%' }} />
+                      </span>
+                      <span className={styles.faceHatch} aria-hidden="true" />
+                    </div>
+                  )}
+                </motion.div>
               </motion.div>
-            </motion.div>
             );
           })}
 
