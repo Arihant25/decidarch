@@ -233,8 +233,8 @@ export function GroupDecision({ concern }: Props) {
                     const impactVal = (option.impacts[attr] || '=') as Impact;
                     return (
                       <div key={attr} className={styles.impactRow}>
-                        <span className={styles.impactAttr}>{attr}</span>
                         <ImpactBadge impact={impactVal} />
+                        <span className={styles.impactAttr}>{attr}</span>
                       </div>
                     );
                   })}

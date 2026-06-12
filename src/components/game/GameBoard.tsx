@@ -19,12 +19,25 @@ import { PlayerList } from './PlayerList';
 import { CardHistory } from './CardHistory';
 import { CurrentStats } from './CurrentStats';
 import { useCountdown } from '@/hooks/useCountdown';
+import { TourKey } from './tutorialSteps';
 import styles from './GameBoard.module.css';
 
-export function GameBoard() {
+interface GameBoardProps {
+  /**
+   * While the tutorial runs: the sections revealed so far. Everything else
+   * stays invisible (layout preserved, so callouts can still measure it).
+   * null/undefined = no tutorial, show the whole board.
+   */
+  tourRevealed?: ReadonlySet<TourKey> | null;
+}
+
+export function GameBoard({ tourRevealed }: GameBoardProps) {
   const { gameState } = useGame();
   // Decision log and chat share the right sidebar; only one is expanded at a time
   const [expandedPanel, setExpandedPanel] = useState<'chat' | 'log' | 'none'>('chat');
+
+  const tourClass = (key: TourKey) =>
+    tourRevealed ? (tourRevealed.has(key) ? styles.tourReveal : styles.tourHidden) : '';
 
   const gameEnded = gameState?.phase === 'scoring' || gameState?.phase === 'finished';
   const { formatted, isExpired, percentage } = useCountdown(
@@ -67,7 +80,7 @@ export function GameBoard() {
   return (
     <div className={styles.layout}>
       {/* Top drawing strip */}
-      <header className={styles.topBar}>
+      <header className={`${styles.topBar} ${tourClass('topbar')}`} data-tour="topbar">
         <Link href="/" className={`${styles.cell} ${styles.logoCell}`}>
           DECID<span>ARCH</span>
         </Link>
@@ -102,7 +115,7 @@ export function GameBoard() {
       </header>
 
       {/* Game progress bar — width = cards completed, colour = phase timer urgency */}
-      <div className={styles.timerBar}>
+      <div className={`${styles.timerBar} ${tourClass('topbar')}`} data-tour="topbar">
         <div
           className={styles.timerBarFill}
           style={{
@@ -122,36 +135,51 @@ export function GameBoard() {
 
       {/* Main content area */}
       <div className={styles.mainArea}>
-        {/* Left sidebar */}
+        {/* Left sidebar — slots are display:contents so the tutorial can hide
+            each panel without disturbing the sidebar's flex layout */}
         <aside className={styles.sidebar}>
-          <ProjectCard project={project} />
-          <StakeholderPanel stakeholders={stakeholders} ethicsStakeholders={ethicsStakeholders} />
-          <PlayerList />
+          <div className={`${styles.tourSlot} ${tourClass('project')}`} data-tour="project">
+            <ProjectCard project={project} />
+          </div>
+          <div className={`${styles.tourSlot} ${tourClass('stakeholders')}`} data-tour="stakeholders">
+            <StakeholderPanel stakeholders={stakeholders} ethicsStakeholders={ethicsStakeholders} />
+          </div>
+          <div className={`${styles.tourSlot} ${tourClass('players')}`} data-tour="players">
+            <PlayerList />
+          </div>
         </aside>
 
         {/* Center content — keyed so each phase change replays the enter animation */}
         <main
           key={`${gameState.currentConcernIndex}-${gameState.phase}`}
-          className={styles.center}
+          className={`${styles.center} ${tourClass('center')}`}
+          data-deal-fallback
+          data-tour="center"
         >
           {renderPhase()}
         </main>
 
         {/* Right sidebar */}
         <aside className={styles.rightSidebar}>
-          <CurrentStats />
-          <CardHistory
-            isCollapsed={expandedPanel !== 'log'}
-            onToggle={() =>
-              setExpandedPanel((prev) => (prev === 'log' ? 'none' : 'log'))
-            }
-          />
-          <ChatPanel
-            isCollapsed={expandedPanel !== 'chat'}
-            onToggle={() =>
-              setExpandedPanel((prev) => (prev === 'chat' ? 'none' : 'chat'))
-            }
-          />
+          <div className={`${styles.tourSlot} ${tourClass('stats')}`} data-tour="stats">
+            <CurrentStats />
+          </div>
+          <div className={`${styles.tourSlot} ${tourClass('log')}`} data-tour="log">
+            <CardHistory
+              isCollapsed={expandedPanel !== 'log'}
+              onToggle={() =>
+                setExpandedPanel((prev) => (prev === 'log' ? 'none' : 'log'))
+              }
+            />
+          </div>
+          <div className={`${styles.tourSlot} ${tourClass('chat')}`} data-tour="chat">
+            <ChatPanel
+              isCollapsed={expandedPanel !== 'chat'}
+              onToggle={() =>
+                setExpandedPanel((prev) => (prev === 'chat' ? 'none' : 'chat'))
+              }
+            />
+          </div>
         </aside>
       </div>
     </div>

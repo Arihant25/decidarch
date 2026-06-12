@@ -66,13 +66,17 @@ export function StakeholderPanel({ stakeholders, ethicsStakeholders }: Props) {
   // ---- Classic mode ----
   if (!stakeholders) return null;
 
+  const priorityOverrides = gameState?.stakeholderPriorityOverrides ?? {};
+
   return (
     <div className={styles.panel}>
       <h3 className={styles.heading}>Stakeholders</h3>
       {stakeholders.map((s) => {
+        const overrides = priorityOverrides[s.id] ?? {};
         const allSatisfied = s.priorities.every(p => {
+          const effectivePriority = overrides[p.attribute] ?? p.importance;
           const curr = scoresMap[p.attribute] || 0;
-          return curr >= p.importance;
+          return curr >= effectivePriority;
         });
 
         const reaction = s.priorities.reduce(
@@ -110,6 +114,8 @@ export function StakeholderPanel({ stakeholders, ethicsStakeholders }: Props) {
             <p className={styles.description}>{s.description}</p>
             <div className={styles.priorities}>
               {s.priorities.map((p) => {
+                const effectivePriority = overrides[p.attribute] ?? p.importance;
+                const isOverridden = effectivePriority !== p.importance;
                 const pd = deltas[p.attribute] ?? 0;
                 return (
                   <div key={p.attribute} className={styles.priority}>
@@ -123,7 +129,13 @@ export function StakeholderPanel({ stakeholders, ethicsStakeholders }: Props) {
                           {pd > 0 ? `▲+${pd}` : `▼${pd}`}
                         </span>
                       )}{' '}
-                      QA-Priority: <strong>{p.importance}</strong>
+                      QA-Priority:{' '}
+                      <strong className={isOverridden ? styles.priorityOverridden : undefined}>
+                        {effectivePriority}
+                      </strong>
+                      {isOverridden && (
+                        <span className={styles.priorityOriginal}> /{p.importance}</span>
+                      )}
                     </span>
                   </div>
                 );

@@ -31,7 +31,7 @@ export default function RulesPage() {
           <h1 className={styles.title}>HOW TO PLAY</h1>
           <p className={styles.subtitle}>
             {version === 'ethics'
-              ? 'Ethics-Aware DecidArch — Reflect on Ethical Considerations in Software Architecture.'
+              ? 'Ethics-Aware DecidArch: Ethical Considerations in Software Architecture.'
               : 'A Multiplayer Card Game for Software Architects. Learn the rules of engagement.'}
           </p>
 
@@ -151,8 +151,7 @@ export default function RulesPage() {
                 <h2 className={styles.ruleTitle}>Sudden Events</h2>
                 <div className={styles.ruleText}>
                   <p>
-                    Architecture is never static. Periodically, an <strong>Event Card</strong> will be drawn,
-                    representing shifting requirements, budget cuts, or new technology trends.
+                    Architecture is never static. Periodically, an <strong>Event Card</strong> is drawn: the requirements shift, budgets get cut, or new technology emerges.
                   </p>
                   <ul>
                     <li>Events may force you to reconsider past decisions.</li>
@@ -181,7 +180,7 @@ export default function RulesPage() {
                 <div className={styles.ruleText}>
                   <p>Each player draws a <strong>Stakeholder Card</strong> to take on a role (e.g. female library member, product manager, sponsor).</p>
                   <ul>
-                    <li>Read the <strong>Project Card</strong> — the Library Management System with the &ldquo;Modesty&rdquo; parameter.</li>
+                    <li>Read the <strong>Project Card</strong>: the Library Management System with the &ldquo;Modesty&rdquo; parameter.</li>
                     <li>Review the <strong>Ethical Value Cards</strong> placed face-up in the center.</li>
                     <li>Shuffle the <strong>Ethical Concern + Wild Cards</strong> and <strong>Event Cards</strong> into separate face-down stacks.</li>
                   </ul>
@@ -201,7 +200,7 @@ export default function RulesPage() {
                   <p>When an <strong>Ethical Concern Card</strong> is drawn, each player proposes a safeguard independently from their stakeholder&apos;s perspective.</p>
                   <ul>
                     <li>Read the concern, the safeguard hint, and the affected ethical values.</li>
-                    <li>Write a safeguard proposal — how should this concern be addressed?</li>
+                    <li>Write a safeguard proposal: how should this concern be addressed?</li>
                     <li>Consider the ethical values that matter most to your stakeholder role.</li>
                   </ul>
                 </div>
@@ -220,8 +219,8 @@ export default function RulesPage() {
                   <p>All proposals are revealed. The host leads discussion to reach a group safeguard.</p>
                   <ul>
                     <li>Discuss each proposal from each stakeholder&apos;s perspective.</li>
-                    <li>Agree on a group safeguard — the host writes it and rates its impact on each affected value using <strong>++ / + / − / −−</strong>.</li>
-                    <li>There are no &ldquo;wrong&rdquo; answers — the goal is reflection and awareness.</li>
+                    <li>Agree on a group safeguard: the host writes it and rates its impact on each affected value using <strong>++ / + / − / −−</strong>.</li>
+                    <li>There are no &ldquo;wrong&rdquo; answers; the goal is reflection and awareness.</li>
                   </ul>
                 </div>
               </div>
@@ -240,7 +239,7 @@ export default function RulesPage() {
                   <ul>
                     <li>Example: a social media campaign raises Noora&apos;s parents&apos; V-importance for Hope to 2.</li>
                     <li>V-importance changes are applied immediately and affect future scoring.</li>
-                    <li>Reflect on how external forces shape ethical priorities.</li>
+                    <li>Notice how outside forces can shift ethical priorities.</li>
                   </ul>
                 </div>
               </div>

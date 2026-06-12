@@ -14,7 +14,7 @@ export default function NotFound() {
 
                 <h1 className={styles.heading}>Blueprint Not Found</h1>
                 <p className={styles.subheading}>
-                    This page was never drafted — or it got lost in the archive.
+                    This page was never drafted, or it got lost in the archive.
                 </p>
 
                 <Link href="/" className={styles.homeBtn}>

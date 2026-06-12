@@ -135,6 +135,47 @@
   overflow-y: auto;
 }
 
+/* --------------- Tutorial reveal --------------- */
+
+/* Slot wrappers contribute no box of their own — the wrapped panel stays a
+   direct flex child, which the right sidebar's expand/collapse relies on */
+.tourSlot {
+  display: contents;
+}
+
+/* Hidden but still laid out, so the tour can measure where things will be
+   and reveals don't shift the board around */
+.tourHidden {
+  visibility: hidden;
+}
+
+/* Blueprint wipe — opacity/clip only, no transform, so the tutorial's
+   highlight ring can measure the section mid-animation and still land
+   exactly on its settled position */
+.tourReveal:not(.tourSlot),
+.tourSlot.tourReveal > * {
+  animation: tourReveal 0.5s var(--ease-draft) both;
+}
+
+@keyframes tourReveal {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tourReveal:not(.tourSlot),
+  .tourSlot.tourReveal > * {
+    animation: none;
+  }
+}
+
 /* --------------- Responsive --------------- */
 
 @media (max-width: 1200px) {

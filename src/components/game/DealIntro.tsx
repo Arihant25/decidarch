@@ -2,13 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, MotionConfig } from 'motion/react';
-import { GameVersion } from '@/lib/types';
+import { ConcernCard, EthicsConcernCard, GameVersion } from '@/lib/types';
 import styles from './DealIntro.module.css';
 
 interface DealIntroProps {
   cardCount: number;
   roomCode: string;
   gameVersion: GameVersion;
+  /** The concern currently on the board — shown on the single face-up card */
+  concern: ConcernCard | EthicsConcernCard | null;
   onComplete: () => void;
 }
 
@@ -17,10 +19,11 @@ const STEP_DECK = 0;
 const STEP_DEAL = 1;
 const STEP_FLIP = 2;
 const STEP_STAMP = 3;
+const STEP_GATHER = 4;
 
 const MAX_FAN_CARDS = 7;
 const DEAL_STAGGER = 0.09;
-const FLIP_STAGGER = 0.06;
+const GATHER_STAGGER = 0.05;
 
 /** Deterministic pseudo-random in [-1, 1] so rerenders keep the same jitter */
 function jitter(seed: number) {
@@ -28,65 +31,212 @@ function jitter(seed: number) {
   return (x - Math.floor(x)) * 2 - 1;
 }
 
-export function DealIntro({ cardCount, roomCode, gameVersion, onComplete }: DealIntroProps) {
+/**
+ * Synthesized card-deal sounds: one filtered noise "swish" per card, scheduled
+ * on the audio clock to match the deal stagger. Returns the context so the
+ * caller can close it (skip/unmount). Silently no-ops if audio is unavailable
+ * or autoplay is blocked (e.g. page refresh with no user gesture yet).
+ */
+function playDealSounds(count: number, stagger: number): AudioContext | null {
+  if (typeof window === 'undefined' || typeof AudioContext === 'undefined') return null;
+  try {
+    const ctx = new AudioContext();
+    const schedule = () => {
+      if (ctx.state !== 'running') return;
+      const noise = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 0.15), ctx.sampleRate);
+      const data = noise.getChannelData(0);
+      for (let s = 0; s < data.length; s++) data[s] = Math.random() * 2 - 1;
+
+      for (let i = 0; i < count; i++) {
+        const t = ctx.currentTime + 0.03 + i * stagger;
+        const src = ctx.createBufferSource();
+        src.buffer = noise;
+        src.playbackRate.value = 1 + jitter(i + 70) * 0.15;
+        const swish = ctx.createBiquadFilter();
+        swish.type = 'bandpass';
+        swish.Q.value = 0.8;
+        swish.frequency.setValueAtTime(2400, t);
+        swish.frequency.exponentialRampToValueAtTime(700, t + 0.12);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.3, t + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+        src.connect(swish);
+        swish.connect(gain);
+        gain.connect(ctx.destination);
+        src.start(t);
+        src.stop(t + 0.16);
+      }
+    };
+    ctx.resume().then(schedule).catch(() => {});
+    return ctx;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Synthesized stamp impact on the deal-sounds context: a pitch-dropping low
+ * "thunk" plus a short bright noise click (the paper slap). Timed slightly
+ * late so it lands as the stamp's entrance spring hits the sheet.
+ */
+function playStampSound(ctx: AudioContext | null) {
+  if (!ctx || ctx.state !== 'running') return;
+  try {
+    const t = ctx.currentTime + 0.1;
+
+    const thunk = ctx.createOscillator();
+    thunk.type = 'sine';
+    thunk.frequency.setValueAtTime(170, t);
+    thunk.frequency.exponentialRampToValueAtTime(55, t + 0.12);
+    const thunkGain = ctx.createGain();
+    thunkGain.gain.setValueAtTime(0, t);
+    thunkGain.gain.linearRampToValueAtTime(0.55, t + 0.008);
+    thunkGain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    thunk.connect(thunkGain);
+    thunkGain.connect(ctx.destination);
+    thunk.start(t);
+    thunk.stop(t + 0.25);
+
+    const slap = ctx.createBufferSource();
+    const noise = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 0.06), ctx.sampleRate);
+    const data = noise.getChannelData(0);
+    for (let s = 0; s < data.length; s++) data[s] = Math.random() * 2 - 1;
+    slap.buffer = noise;
+    const bright = ctx.createBiquadFilter();
+    bright.type = 'highpass';
+    bright.frequency.value = 1200;
+    const slapGain = ctx.createGain();
+    slapGain.gain.setValueAtTime(0.28, t);
+    slapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    slap.connect(bright);
+    bright.connect(slapGain);
+    slapGain.connect(ctx.destination);
+    slap.start(t);
+    slap.stop(t + 0.06);
+  } catch {
+    /* audio unavailable */
+  }
+}
+
+/**
+ * The live concern card on the board underneath the overlay: its centre as an
+ * offset from the viewport centre (the cards' coordinate origin) plus its
+ * size, so the hero card can morph into the exact same panel.
+ */
+function measureBoardCard() {
+  const el =
+    document.querySelector('[data-deal-target]') ??
+    document.querySelector('[data-deal-fallback]');
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  // The fallback is the whole centre column — clamp to a plausible panel size
+  const w = Math.min(r.width, 800);
+  const h = Math.min(r.height, window.innerHeight * 0.5);
+  return {
+    x: r.left + w / 2 - window.innerWidth / 2,
+    y: r.top + h / 2 - window.innerHeight / 2,
+    w,
+    h,
+  };
+}
+
+export function DealIntro({ cardCount, roomCode, gameVersion, concern, onComplete }: DealIntroProps) {
   const [step, setStep] = useState(STEP_DECK);
+  const [target, setTarget] = useState<ReturnType<typeof measureBoardCard>>(null);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const audioRef = useRef<AudioContext | null>(null);
   const doneRef = useRef(false);
 
   const fanCount = Math.min(cardCount, MAX_FAN_CARDS);
 
-  // Fan geometry, computed once on mount (client-only component)
-  const slots = useMemo(() => {
+  // Card + fan geometry, computed once on mount (client-only component)
+  const { cardW, cardH, deckY, slots } = useMemo(() => {
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
-    const spread = Math.min(vw * 0.78, 880);
-    return Array.from({ length: fanCount }, (_, i) => {
-      const t = fanCount === 1 ? 0.5 : i / (fanCount - 1);
-      return {
-        x: (t - 0.5) * spread,
-        // Hand-of-cards arc: edges sit lower than the middle
-        y: Math.pow((t - 0.5) * 2, 2) * 46 - 20 + jitter(i) * 6,
-        rotate: (t - 0.5) * 36 + jitter(i + 40) * 3,
-      };
-    });
-  }, [fanCount]);
-
-  const deckY = useMemo(() => {
     const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
-    return Math.min(vh * 0.34, 320);
-  }, []);
+    // Mirror the CSS card sizing: width clamp(92px, 11vw, 138px), 5/7 aspect
+    const w = Math.min(Math.max(92, vw * 0.11), 138);
+    const h = w * (7 / 5);
+    // Caption strip: bottom offset clamp(2rem, 6vh, 3.5rem) plus text height.
+    // Keep the deck's bottom edge clear of it, but stay below centre.
+    const captionSpace = Math.min(Math.max(32, vh * 0.06), 56) + 36;
+    const dy = Math.max(Math.min(vh * 0.34, 320, vh / 2 - h / 2 - captionSpace), 60);
+    const spread = Math.min(vw * 0.78, 880);
+    return {
+      cardW: w,
+      cardH: h,
+      deckY: dy,
+      slots: Array.from({ length: fanCount }, (_, i) => {
+        const t = fanCount === 1 ? 0.5 : i / (fanCount - 1);
+        return {
+          x: (t - 0.5) * spread,
+          // Hand-of-cards arc: edges sit lower than the middle
+          y: Math.pow((t - 0.5) * 2, 2) * 46 - 20 + jitter(i) * 6,
+          rotate: (t - 0.5) * 36 + jitter(i + 40) * 3,
+        };
+      }),
+    };
+  }, [fanCount]);
 
   const finish = () => {
     if (doneRef.current) return;
     doneRef.current = true;
     timersRef.current.forEach(clearTimeout);
+    audioRef.current?.close().catch(() => {});
+    audioRef.current = null;
     onComplete();
   };
 
   useEffect(() => {
     const dealAt = 900;
-    const flipAt = dealAt + fanCount * DEAL_STAGGER * 1000 + 520;
-    const stampAt = flipAt + fanCount * FLIP_STAGGER * 1000 + 480;
-    const doneAt = stampAt + 1500;
+    // Generous holds between phases so each beat has time to land
+    const flipAt = dealAt + fanCount * DEAL_STAGGER * 1000 + 1150;
+    // Long enough to read the face-up concern before the stamp lands
+    const stampAt = flipAt + 2000;
+    const gatherAt = stampAt + 1400;
+    const doneAt = gatherAt + fanCount * GATHER_STAGGER * 1000 + 650;
 
     timersRef.current = [
-      setTimeout(() => setStep(STEP_DEAL), dealAt),
-      setTimeout(() => setStep(STEP_FLIP), flipAt),
-      setTimeout(() => setStep(STEP_STAMP), stampAt),
+      setTimeout(() => {
+        setStep(STEP_DEAL);
+        audioRef.current = playDealSounds(fanCount, DEAL_STAGGER);
+      }, dealAt),
+      setTimeout(() => {
+        setTarget(measureBoardCard());
+        setStep(STEP_FLIP);
+      }, flipAt),
+      setTimeout(() => {
+        setStep(STEP_STAMP);
+        playStampSound(audioRef.current);
+      }, stampAt),
+      setTimeout(() => {
+        // Remeasure in case the board reflowed underneath the overlay
+        setTarget((prev) => measureBoardCard() ?? prev);
+        setStep(STEP_GATHER);
+      }, gatherAt),
       setTimeout(finish, doneAt),
     ];
-    return () => timersRef.current.forEach(clearTimeout);
+    return () => {
+      timersRef.current.forEach(clearTimeout);
+      audioRef.current?.close().catch(() => {});
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const concernLabel = gameVersion === 'ethics' ? 'ETHICS CONCERN' : 'DESIGN CONCERN';
+  const concernIdLabel = concern
+    ? concern.id.replace(/[a-z]+-/, 'NO. ').replace('-', ' ')
+    : null;
   const caption =
     step === STEP_DECK
       ? 'SHUFFLING CONCERN DECK'
       : step === STEP_DEAL
         ? `DEALING ${cardCount} CONCERN SHEETS`
         : step === STEP_FLIP
-          ? 'REVIEWING DRAFT SET'
-          : 'COMMENCE DRAFTING';
+          ? 'DRAWING ACTIVE CONCERN'
+          : step === STEP_STAMP
+            ? 'COMMENCE DRAFTING'
+            : 'FILING TO DRAFT BOARD';
 
   return (
     <MotionConfig reducedMotion="user">
@@ -135,63 +285,108 @@ export function DealIntro({ cardCount, roomCode, gameVersion, onComplete }: Deal
             ))}
           </motion.div>
 
-          {/* Dealt cards */}
-          {slots.map((slot, i) => (
+          {/* Dealt cards — card 0 is the "hero": the actual active concern,
+              the only one that flips face up. On flip it morphs into the
+              board panel's exact size, then glides onto its position. */}
+          {slots.map((slot, i) => {
+            const isHero = i === 0;
+            // Stagger the move on deal and gather; flip/stamp transitions are
+            // instant. The hero leads the gather, the rest tuck in behind it.
+            const moveDelay =
+              step === STEP_DEAL
+                ? i * DEAL_STAGGER
+                : step === STEP_GATHER && !isHero
+                  ? i * GATHER_STAGGER
+                  : 0;
+            // Let the flip get going before the hero's size morph starts
+            const sizeDelay = step === STEP_FLIP ? 0.15 : moveDelay;
+            const deckPose = { x: 0, y: deckY - 8, rotate: jitter(i + 9) * 2, scale: 0.96 };
+            const fanPose = { x: slot.x, y: slot.y, rotate: slot.rotate, scale: 1 };
+            const heroSize = { width: target?.w ?? cardW * 2.1, height: target?.h ?? cardH * 1.3 };
+            const pose = isHero
+              ? step >= STEP_GATHER
+                // Land square on the live concern card, at its exact size
+                ? { x: target?.x ?? 0, y: target?.y ?? 0, rotate: 0, scale: 1, ...heroSize }
+                : step >= STEP_FLIP
+                  // Front and centre as the full-size concern sheet
+                  ? { x: 0, y: 0, rotate: 0, scale: 1, ...heroSize }
+                  : step >= STEP_DEAL
+                    ? { ...fanPose, width: cardW, height: cardH }
+                    : { ...deckPose, width: cardW, height: cardH }
+              : step >= STEP_GATHER
+                ? {
+                    x: (target?.x ?? 0) + jitter(i + 50) * 5,
+                    y: (target?.y ?? 0) + jitter(i + 60) * 5,
+                    rotate: jitter(i + 21) * 3,
+                    scale: 0.92,
+                  }
+                : step >= STEP_DEAL
+                  ? fanPose
+                  : deckPose;
+            return (
             <motion.div
               key={i}
               className={styles.card}
-              style={{ zIndex: 10 + i }}
-              initial={{ x: 0, y: deckY - 8, rotate: jitter(i + 9) * 2, scale: 0.96 }}
-              animate={
-                step >= STEP_DEAL
-                  ? { x: slot.x, y: slot.y, rotate: slot.rotate, scale: 1 }
-                  : { x: 0, y: deckY - 8, rotate: jitter(i + 9) * 2, scale: 0.96 }
+              style={{ zIndex: isHero && step >= STEP_FLIP ? 45 : 10 + i }}
+              initial={{ ...deckPose, ...(isHero ? { width: cardW, height: cardH } : {}) }}
+              animate={pose}
+              exit={
+                isHero
+                  // Pixel-aligned over the real panel — fade only, no shrink
+                  ? { opacity: 0, transition: { duration: 0.4, ease: 'easeIn' } }
+                  : { opacity: 0, scale: 0.96, transition: { duration: 0.35, ease: 'easeIn' } }
               }
-              exit={{
-                x: slot.x * 1.7,
-                y: -900,
-                rotate: slot.rotate * 4,
-                opacity: 0,
-                transition: { duration: 0.5, delay: i * 0.03, ease: 'easeIn' },
-              }}
               transition={{
-                delay: step === STEP_DEAL ? i * DEAL_STAGGER : 0,
-                x: { type: 'spring', stiffness: 160, damping: 17, delay: step === STEP_DEAL ? i * DEAL_STAGGER : 0 },
-                y: { type: 'spring', stiffness: 110, damping: 15, delay: step === STEP_DEAL ? i * DEAL_STAGGER : 0 },
-                rotate: { type: 'spring', stiffness: 130, damping: 13, delay: step === STEP_DEAL ? i * DEAL_STAGGER : 0 },
-                scale: { duration: 0.3 },
+                delay: moveDelay,
+                x: { type: 'spring', stiffness: 160, damping: 17, delay: moveDelay },
+                y: { type: 'spring', stiffness: 110, damping: 15, delay: moveDelay },
+                rotate: { type: 'spring', stiffness: 130, damping: 13, delay: moveDelay },
+                scale: { duration: 0.3, delay: moveDelay },
+                width: { type: 'spring', stiffness: 170, damping: 23, delay: sizeDelay },
+                height: { type: 'spring', stiffness: 170, damping: 23, delay: sizeDelay },
               }}
             >
               <motion.div
                 className={styles.cardInner}
-                animate={{ rotateY: step >= STEP_FLIP ? 180 : 0 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 210,
-                  damping: 20,
-                  delay: step === STEP_FLIP ? i * FLIP_STAGGER : 0,
-                }}
+                animate={{ rotateY: isHero && step >= STEP_FLIP ? 180 : 0 }}
+                transition={{ type: 'spring', stiffness: 210, damping: 20 }}
               >
                 <div className={styles.cardBack}>
                   <CardBack />
                 </div>
-                <div className={styles.cardFace}>
-                  <span className={styles.faceTopRow}>
-                    <span>SHEET</span>
-                    <span>{String(i + 1).padStart(2, '0')}/{String(cardCount).padStart(2, '0')}</span>
-                  </span>
-                  <span className={styles.faceNumber}>{String(i + 1).padStart(2, '0')}</span>
-                  <span className={styles.faceLabel}>{concernLabel}</span>
-                  <span className={styles.faceRedacted} aria-hidden="true">
-                    <i style={{ width: '82%' }} />
-                    <i style={{ width: '58%' }} />
-                    <i style={{ width: '70%' }} />
-                  </span>
-                  <span className={styles.faceHatch} aria-hidden="true" />
-                </div>
+                {isHero && concern ? (
+                  /* The real active concern, styled like the board's sheet */
+                  <div className={`${styles.cardFace} ${styles.cardFaceConcern}`}>
+                    <span className={styles.cfHeader}>
+                      <i className={styles.cfTag}>{gameVersion === 'ethics' ? 'ETH' : 'CON'}</i>
+                      <i className={styles.cfKind}>
+                        {gameVersion === 'ethics' ? 'Ethical Concern' : 'Concern'}
+                      </i>
+                      <i className={styles.cfId}>{concernIdLabel}</i>
+                    </span>
+                    <strong className={styles.cfTitle}>{concern.title}</strong>
+                    <span className={styles.cfDesc}>{concern.description}</span>
+                  </div>
+                ) : (
+                  <div className={styles.cardFace}>
+                    <span className={styles.faceTopRow}>
+                      <span>SHEET</span>
+                      <span>{String(i + 1).padStart(2, '0')}/{String(cardCount).padStart(2, '0')}</span>
+                    </span>
+                    <span className={styles.faceNumber}>{String(i + 1).padStart(2, '0')}</span>
+                    <span className={styles.faceLabel}>{concernLabel}</span>
+                    <span className={styles.faceRedacted} aria-hidden="true">
+                      <i style={{ width: '82%' }} />
+                      <i style={{ width: '58%' }} />
+                      <i style={{ width: '70%' }} />
+                    </span>
+                    <span className={styles.faceHatch} aria-hidden="true" />
+                  </div>
+                )}
               </motion.div>
             </motion.div>
-          ))}
+            );
+          })}
 
           {/* Registration stamp */}
           {step >= STEP_STAMP && (
@@ -206,9 +401,17 @@ export function DealIntro({ cardCount, roomCode, gameVersion, onComplete }: Deal
               <motion.div
                 className={styles.stamp}
                 initial={{ opacity: 0, scale: 2.6, rotate: -24 }}
-                animate={{ opacity: 1, scale: 1, rotate: -7 }}
+                animate={
+                  step >= STEP_GATHER
+                    ? { opacity: 0, scale: 0.92, rotate: -7 }
+                    : { opacity: 1, scale: 1, rotate: -7 }
+                }
                 exit={{ opacity: 0, scale: 1.15, transition: { duration: 0.3 } }}
-                transition={{ type: 'spring', stiffness: 330, damping: 18 }}
+                transition={
+                  step >= STEP_GATHER
+                    ? { duration: 0.35, ease: 'easeIn' }
+                    : { type: 'spring', stiffness: 330, damping: 18 }
+                }
               >
                 <span className={styles.stampTop}>DECIDARCH · SESSION {roomCode}</span>
                 <span className={styles.stampMain}>ISSUED FOR CONSTRUCTION</span>

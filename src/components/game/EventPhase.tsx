@@ -302,8 +302,8 @@ export function EventPhase() {
                       <div className={styles.impactGrid}>
                         {allAttributes.map((attr) => (
                           <div key={attr} className={styles.impactRow}>
-                            <span className={styles.impactAttr}>{attr}</span>
                             <ImpactBadge impact={opt.impacts[attr] as Impact} />
+                            <span className={styles.impactAttr}>{attr}</span>
                           </div>
                         ))}
                       </div>

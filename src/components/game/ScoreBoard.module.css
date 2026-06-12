@@ -409,10 +409,6 @@
   margin-bottom: var(--space-sm);
 }
 
-.calcMinus {
-  color: var(--red);
-}
-
 .calcTotal {
   display: flex;
   justify-content: space-between;

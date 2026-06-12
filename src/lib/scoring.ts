@@ -8,7 +8,7 @@
 // 2. Compare QA-Score against each Stakeholder's QA-Priority
 //    If any QA-Score < QA-Priority → LOSE (stakeholder unsatisfied)
 // 3. Stakeholder Satisfaction Level = sum of (QA-Score - QA-Priority) per attribute
-// 4. Final Score = sum of all Stakeholder Satisfaction Levels - unaddressed concern cards
+// 4. Final Score = sum of all Stakeholder Satisfaction Levels
 //
 // Final Score ranges:
 //   < 0:      Lost
@@ -59,7 +59,6 @@ export interface GameScore {
   anyQANegative: boolean;
   stakeholderSatisfactions: StakeholderSatisfaction[];
   anyStakeholderUnsatisfied: boolean;
-  unaddressedConcerns: number;
   totalStakeholderSatisfaction: number;
   finalScore: number;
   lost: boolean;
@@ -116,15 +115,17 @@ export function calculateScores(state: GameState): GameScore {
 
   // Step 2: Check Stakeholder Satisfaction
   const stakeholderSatisfactions: StakeholderSatisfaction[] = stakeholders.map((stakeholder) => {
+    const priorityOverrides = state.stakeholderPriorityOverrides?.[stakeholder.id] ?? {};
     const attributeDetails = stakeholder.priorities.map((priority) => {
+      const effectivePriority = priorityOverrides[priority.attribute] ?? priority.importance;
       const qaEntry = qaScores.find((q) => q.attribute === priority.attribute);
       const qaScore = qaEntry ? qaEntry.score : 0;
       return {
         attribute: priority.attribute,
-        qaPriority: priority.importance,
+        qaPriority: effectivePriority,
         qaScore,
-        satisfaction: qaScore - priority.importance,
-        satisfied: qaScore >= priority.importance,
+        satisfaction: qaScore - effectivePriority,
+        satisfied: qaScore >= effectivePriority,
       };
     });
 
@@ -142,12 +143,11 @@ export function calculateScores(state: GameState): GameScore {
   const anyStakeholderUnsatisfied = stakeholderSatisfactions.some((s) => !s.allSatisfied);
 
   // Step 3 & 4: Calculate Final Score
-  const unaddressedConcerns = concerns.length - state.groupDecisions.length;
   const totalStakeholderSatisfaction = stakeholderSatisfactions.reduce(
     (sum, s) => sum + s.totalSatisfaction,
     0
   );
-  const finalScore = totalStakeholderSatisfaction - unaddressedConcerns;
+  const finalScore = totalStakeholderSatisfaction;
 
   // Determine if the game is lost
   let lost = false;
@@ -199,7 +199,6 @@ export function calculateScores(state: GameState): GameScore {
     anyQANegative,
     stakeholderSatisfactions,
     anyStakeholderUnsatisfied,
-    unaddressedConcerns,
     totalStakeholderSatisfaction,
     finalScore,
     lost,
@@ -243,8 +242,6 @@ export interface EthicsScore {
   stakeholderScores: EthicsStakeholderScore[];
   finalScore: number;
   grade: string;
-  unaddressedConcerns: number;
-  totalConcerns: number;
 }
 
 export function calculateEthicsScore(state: GameState): EthicsScore {
@@ -279,7 +276,6 @@ export function calculateEthicsScore(state: GameState): EthicsScore {
   });
 
   const finalScore = stakeholderScores.reduce((sum, s) => sum + s.totalContribution, 0);
-  const unaddressedConcerns = concerns.length - state.groupDecisions.length;
 
   let grade: string;
   if (finalScore < 0) grade = 'Reflection Needed';
@@ -292,7 +288,5 @@ export function calculateEthicsScore(state: GameState): EthicsScore {
     stakeholderScores,
     finalScore,
     grade,
-    unaddressedConcerns,
-    totalConcerns: concerns.length,
   };
 }

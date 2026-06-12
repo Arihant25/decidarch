@@ -601,6 +601,43 @@ input, textarea, select {
   }
 }
 
+/* --------------- Deal intro --------------- */
+
+/* While the tutorial and deal intro play, the live concern card's content
+   stays hidden (but keeps its layout, so the intro can measure where to land
+   its card). The panel itself remains as an empty reserved slot — a dashed
+   drafting outline the intro's hero card settles into. */
+[data-dealing] [data-deal-target] {
+  position: relative;
+  background: rgba(141, 198, 255, 0.03);
+  border-color: var(--line-dashed);
+  border-style: dashed;
+  box-shadow: none;
+}
+
+[data-dealing] [data-deal-target] > * {
+  visibility: hidden;
+}
+
+/* Mute the card's own inner frame so only the slot outline shows */
+[data-dealing] [data-deal-target]::before {
+  border-color: transparent;
+}
+
+[data-dealing] [data-deal-target]::after {
+  content: 'RESERVED · CONCERN CARD';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: var(--faint);
+  text-align: center;
+}
+
 /* --------------- Reduced motion --------------- */
 
 @media (prefers-reduced-motion: reduce) {

@@ -12,13 +12,19 @@ interface ChatPanelProps {
 export function ChatPanel({ isCollapsed, onToggle }: ChatPanelProps) {
   const { gameState, playerId, sendChat } = useGame();
   const [text, setText] = useState('');
+  const [seenCount, setSeenCount] = useState(0);
   const messagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isCollapsed) return;
     const el = messagesRef.current;
     el?.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    setSeenCount(gameState?.chatMessages.length ?? 0);
   }, [gameState?.chatMessages, isCollapsed]);
+
+  const unreadCount = isCollapsed
+    ? Math.max(0, (gameState?.chatMessages.length ?? 0) - seenCount)
+    : 0;
 
   if (!gameState) return null;
 
@@ -43,6 +49,9 @@ export function ChatPanel({ isCollapsed, onToggle }: ChatPanelProps) {
       >
         <div className={styles.headerTitle}>
           Field Notes — Team Chat
+          {unreadCount > 0 && (
+            <span className={styles.badge}>{unreadCount}</span>
+          )}
         </div>
         <div className={styles.toggleIcon}>
           {isCollapsed ? '+' : '−'}

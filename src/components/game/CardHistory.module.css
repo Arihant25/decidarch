@@ -14,6 +14,65 @@
   flex-shrink: 0;
 }
 
+/* ---- Past event log (always visible) ---- */
+
+.eventLog {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.eventLogHeading {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--line);
+}
+
+.eventLogHeading::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+}
+
+.eventCards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+
+.eventCard {
+  background: rgba(141, 198, 255, 0.04);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--gold);
+  padding: var(--space-sm);
+}
+
+.eventIndex {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.eventEffect {
+  font-size: var(--text-xs);
+  color: var(--dim);
+  line-height: 1.4;
+}
+
 .body {
   display: grid;
   grid-template-rows: 1fr;

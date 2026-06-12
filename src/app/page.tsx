@@ -189,7 +189,7 @@ export default function Home() {
           </svg>
 
           <p className={styles.subtitle}>
-            Draft a system. Balance your stakeholders. Defend every trade-off —
+            Draft a system. Balance your stakeholders. Defend every trade-off
             until the requirements change underneath you.
           </p>
 
@@ -379,7 +379,7 @@ export default function Home() {
 
           <ol className={styles.steps}>
             <li>Draw a concern card &amp; prepare individually</li>
-            <li>Reveal positions — decide as a group</li>
+            <li>Reveal positions, then decide as a group</li>
             <li>Survive events. Satisfy stakeholders. Score.</li>
           </ol>
         </aside>

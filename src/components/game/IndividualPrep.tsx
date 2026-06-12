@@ -72,7 +72,8 @@ export function IndividualPrep({ concern }: Props) {
   return (
     <div className={styles.container}>
       {/* Concern Card */}
-      <div className={`${styles.concernCard} animate-card-flip`}>
+      {/* data-deal-target: the deal intro overlay flies its cards to this element */}
+      <div className={`${styles.concernCard} animate-card-flip`} data-deal-target>
         <div className={styles.concernHeader}>
           <span className={styles.concernTag}>{isEthics ? 'ETH' : 'CON'}</span>
           <span className={styles.concernKind}>{isEthics ? 'Ethical Concern' : 'Concern'}</span>
@@ -178,8 +179,8 @@ export function IndividualPrep({ concern }: Props) {
                       const impactVal = (option.impacts[attr] || '=') as Impact;
                       return (
                         <div key={attr} className={styles.impactRow}>
-                          <span className={styles.impactAttr}>{attr}</span>
                           <ImpactBadge impact={impactVal} />
+                          <span className={styles.impactAttr}>{attr}</span>
                         </div>
                       );
                     })}

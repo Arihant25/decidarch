@@ -198,6 +198,8 @@ export interface GameState {
   activeEventId?: string;
   hostSelectedOptionId?: string | null;
   gameVersion: GameVersion;
+  /** Classic mode: event-driven overrides to stakeholder QA-Priority values */
+  stakeholderPriorityOverrides: Record<string, Partial<Record<string, number>>>;
   /** Ethics mode: event-driven overrides to stakeholder V-importance values */
   stakeholderVImportanceOverrides: Record<string, Record<string, number>>;
   /** Live shared draft for group decision phase */

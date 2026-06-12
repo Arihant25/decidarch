@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AnimatePresence } from 'motion/react';
@@ -8,8 +8,11 @@ import { GameProvider, useGame } from '@/context/GameContext';
 import { WaitingRoom } from '@/components/lobby/WaitingRoom';
 import { GameBoard } from '@/components/game/GameBoard';
 import { DealIntro } from '@/components/game/DealIntro';
+import { GameTutorial } from '@/components/game/GameTutorial';
+import { getTutorialSteps, TourKey } from '@/components/game/tutorialSteps';
 import { GameVersion } from '@/lib/types';
-import { EVENT_CARDS } from '@/lib/cardData';
+import { CARD_DATA, EVENT_CARDS } from '@/lib/cardData';
+import { ETHICS_CARD_DATA } from '@/lib/cardDataEthics';
 import styles from './page.module.css';
 
 function RoomContent() {
@@ -66,25 +69,58 @@ function RoomContent() {
     }
   }, [error]);
 
-  // Card-dealing intro — plays whenever this client enters an active game
-  // (game start, refresh, or rejoin), but not on the end-of-game scoreboard
+  // Game-start onboarding — plays only when this client watches the game start
+  // (lobby → active phase). A refresh or rejoin lands mid-game and skips it.
+  // The tutorial walks through the (initially blank) board section by section;
+  // finishing or skipping it hands off to the card-dealing intro.
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
   const [showDealIntro, setShowDealIntro] = useState(false);
   const introPlayedRef = useRef(false);
+  const prevPhaseRef = useRef<string | null>(null);
   const currentPhase = gameState?.phase;
 
   useEffect(() => {
+    const prevPhase = prevPhaseRef.current;
+    prevPhaseRef.current = currentPhase ?? null;
     if (
       !introPlayedRef.current &&
+      prevPhase === 'lobby' &&
       currentPhase &&
       currentPhase !== 'lobby' &&
       currentPhase !== 'scoring' &&
-      currentPhase !== 'finished' &&
-      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      currentPhase !== 'finished'
     ) {
       introPlayedRef.current = true;
-      setShowDealIntro(true);
+      setShowTutorial(true);
     }
   }, [currentPhase]);
+
+  const finishTutorial = useCallback(() => {
+    setShowTutorial(false);
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setShowDealIntro(true);
+    }
+  }, []);
+
+  // If other players race the game to its end mid-tour, the tour stands down
+  const tutorialActive =
+    showTutorial && currentPhase !== 'scoring' && currentPhase !== 'finished';
+
+  const tutorialSteps = useMemo(
+    () => getTutorialSteps(gameState?.gameVersion ?? 'classic'),
+    [gameState?.gameVersion]
+  );
+
+  // Sections revealed so far: every step up to and including the current one
+  const tourRevealed = useMemo(() => {
+    const revealed = new Set<TourKey>();
+    for (let i = 0; i <= tutorialStep && i < tutorialSteps.length; i++) {
+      const key = tutorialSteps[i].key;
+      if (key) revealed.add(key);
+    }
+    return revealed;
+  }, [tutorialStep, tutorialSteps]);
 
   useEffect(() => {
     if (currentPhase && currentPhase !== 'lobby') {
@@ -207,15 +243,43 @@ function RoomContent() {
     return <WaitingRoom />;
   }
 
+  // The concern on the board right now — the intro's face-up card mirrors it
+  const introConcernId = gameState.concernOrder[gameState.currentConcernIndex];
+  const introConcern =
+    gameState.gameVersion === 'ethics'
+      ? (ETHICS_CARD_DATA.concerns.find((c) => c.id === introConcernId) ?? null)
+      : (CARD_DATA.concerns.find((c) => c.id === introConcernId) ?? null);
+
   return (
     <>
-      <GameBoard />
+      {/* data-dealing hides the live concern card (see globals.css) through
+          the tutorial and the deal intro, until the intro's hero card has
+          landed in its place */}
+      <div
+        style={{ display: 'contents' }}
+        data-dealing={tutorialActive || showDealIntro || undefined}
+      >
+        <GameBoard tourRevealed={tutorialActive ? tourRevealed : null} />
+      </div>
+      {tutorialActive && (
+        <GameTutorial
+          steps={tutorialSteps}
+          stepIndex={tutorialStep}
+          onNext={() =>
+            tutorialStep >= tutorialSteps.length - 1
+              ? finishTutorial()
+              : setTutorialStep((s) => s + 1)
+          }
+          onSkip={finishTutorial}
+        />
+      )}
       <AnimatePresence>
         {showDealIntro && (
           <DealIntro
             cardCount={gameState.concernOrder.length}
             roomCode={gameState.roomCode}
             gameVersion={gameState.gameVersion}
+            concern={introConcern}
             onComplete={() => setShowDealIntro(false)}
           />
         )}

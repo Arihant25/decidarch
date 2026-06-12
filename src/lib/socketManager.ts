@@ -225,16 +225,6 @@ function handleSubmitGroupDecision(ws: WebSocket, payload: { optionId: string; r
   const newState = submitGroupDecision(state, payload.optionId, payload.rationale, payload.valueImpacts);
   updateRoom(conn.roomCode, newState);
 
-  // Add system message about the decision
-  const concern = newState.groupDecisions[newState.groupDecisions.length - 1];
-  if (concern) {
-    const { state: withMsg } = addSystemMessage(
-      newState,
-      `Group decided on "${concern.optionName}" for "${concern.concernTitle}".`
-    );
-    updateRoom(conn.roomCode, withMsg);
-  }
-
   broadcastGameState(conn.roomCode);
 }
 

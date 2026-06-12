@@ -56,6 +56,7 @@ export function createGame(
     startedAt: Date.now(),
     timerDuration: 45 * 60, // 45 minutes
     gameVersion,
+    stakeholderPriorityOverrides: {},
     stakeholderVImportanceOverrides: {},
   };
 }
@@ -111,7 +112,8 @@ export function isOptionDisabled(state: GameState, optionId: string): boolean {
   }
 
   if (drawnEvents.includes('event-data-protection')) {
-    if (optionId === 'c3-opt2') {
+    // Cloud storage is banned for all sensitive/operational data
+    if (optionId === 'c3-opt2' || optionId === 'c2-opt2') {
       return true;
     }
   }
@@ -245,13 +247,47 @@ export function submitGroupDecision(
   };
 }
 
+/** QA-Priority overrides applied by each classic event */
+const CLASSIC_EVENT_PRIORITY_OVERRIDES: Record<
+  string,
+  Array<{ stakeholderId: string; attribute: string; importance: number }>
+> = {
+  'event-new-cto': [
+    { stakeholderId: 'stakeholder-owner', attribute: 'Maintainability', importance: 3 },
+  ],
+  'event-data-protection': [
+    { stakeholderId: 'stakeholder-owner', attribute: 'Security', importance: 2 },
+  ],
+  'event-user-survey': [
+    { stakeholderId: 'stakeholder-user', attribute: 'Performance', importance: 3 },
+    { stakeholderId: 'stakeholder-user', attribute: 'Usability', importance: 0 },
+  ],
+};
+
+/** Apply a classic event's stakeholder QA-Priority overrides to game state */
+function applyClassicEvent(state: GameState): GameState {
+  if (!state.activeEventId) return state;
+  const overrides = CLASSIC_EVENT_PRIORITY_OVERRIDES[state.activeEventId];
+  if (!overrides?.length) return state;
+
+  const newOverrides = { ...state.stakeholderPriorityOverrides };
+  for (const { stakeholderId, attribute, importance } of overrides) {
+    newOverrides[stakeholderId] = {
+      ...(newOverrides[stakeholderId] ?? {}),
+      [attribute]: importance,
+    };
+  }
+  return { ...state, stakeholderPriorityOverrides: newOverrides };
+}
+
 export function advanceToEventRevision(state: GameState): GameState {
   if (state.phase !== 'event') return state;
   if (state.gameVersion === 'ethics') {
     // Ethics mode: apply V-importance change and skip the revision phase
     return advanceAfterEvent(applyEthicsEvent(state));
   }
-  return { ...state, phase: 'event-revision' };
+  // Classic mode: apply priority overrides then enter revision phase
+  return { ...applyClassicEvent(state), phase: 'event-revision' };
 }
 
 /** Apply an ethics event's V-importance override to game state */

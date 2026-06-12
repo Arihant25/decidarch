@@ -57,6 +57,7 @@ export function createRoom(hostName: string, gameVersion: GameVersion = 'classic
     chatMessages: [],
     timerDuration: 45 * 60,
     gameVersion,
+    stakeholderPriorityOverrides: {},
     stakeholderVImportanceOverrides: {},
   };
 

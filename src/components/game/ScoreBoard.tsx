@@ -81,10 +81,6 @@ export function ScoreBoard() {
             <span>Total Stakeholder Contribution</span>
             <span>{score.finalScore}</span>
           </div>
-          <div className={styles.calcRow}>
-            <span>Unaddressed Concerns</span>
-            <span className={styles.calcMinus}>-{score.unaddressedConcerns} (not penalised in ethics mode)</span>
-          </div>
           <div className={styles.calcTotal}>
             <span>REFLECTION SCORE</span>
             <span>{score.finalScore}</span>
@@ -234,10 +230,6 @@ export function ScoreBoard() {
         <div className={styles.calcRow}>
           <span>Total Stakeholder Satisfaction</span>
           <span>{score.totalStakeholderSatisfaction}</span>
-        </div>
-        <div className={styles.calcRow}>
-          <span>Unaddressed Concern Cards</span>
-          <span className={styles.calcMinus}>-{score.unaddressedConcerns}</span>
         </div>
         <div className={styles.calcTotal}>
           <span>FINAL SCORE</span>

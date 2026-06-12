@@ -79,7 +79,7 @@ const RATIONALE_TEMPLATES = [
   (r: string) => `The reasoning was simple: "${r}."`,
   (r: string) => `"${r}," the lead architect explained.`,
   (r: string) => `In the meeting notes, the reasoning was recorded as: "${r}."`,
-  (r: string) => `"${r}" — that was the team's reasoning.`,
+  (r: string) => `"${r}." That was the team's reasoning.`,
   (r: string) => `It came down to one thing: "${r}."`,
   (r: string) => `"${r}," someone typed into the shared doc, and nobody disagreed.`,
 ] as const;
@@ -88,13 +88,13 @@ const REVISION_TEMPLATES = [
   (concern: string, from: string, to: string) =>
     `In the aftermath, they had to go back on ${concern}: ${from} was abandoned in favour of ${to}.`,
   (concern: string, from: string, to: string) =>
-    `In the aftermath, the decision on ${concern} was reopened — ${from} gave way to ${to}.`,
+    `In the aftermath, the decision on ${concern} was reopened: ${from} gave way to ${to}.`,
   (concern: string, from: string, to: string) =>
     `In the aftermath, they changed their choice of ${from} for ${concern} to ${to}.`,
   (concern: string, from: string, to: string) =>
     `The event forced their hand on ${concern}: out went ${from}, in came ${to}.`,
   (concern: string, from: string, to: string) =>
-    `That meant revisiting ${concern}. ${from} no longer made sense — they switched to ${to}.`,
+    `That meant revisiting ${concern}. ${from} no longer made sense, so they switched to ${to}.`,
   (concern: string, from: string, to: string) =>
     `When the dust settled, ${concern} looked different: ${from} was replaced with ${to}.`,
   (concern: string, from: string, to: string) =>
@@ -103,12 +103,12 @@ const REVISION_TEMPLATES = [
 
 const NO_REVISION_TEMPLATES = [
   'The team pored over the blueprints, and decided their earlier choices would hold.',
-  'The architects reviewed every decision made so far — and let them all stand.',
+  'The architects reviewed every decision made so far, and let them all stand.',
   'After a tense review of the design, the team concluded that nothing needed to change.',
   'They revisited every prior decision, and each one passed muster.',
   'The review was uncomfortable, but in the end, the architecture held up.',
   'Fingers hovered over the revision notes, but in the end, they were put down untouched.',
-  'The design was pressure-tested against the new reality — and it held.',
+  'The design was pressure-tested against the new reality, and it held.',
   'Nothing was changed. The earlier decisions, it turned out, had anticipated this.',
 ] as const;
 
@@ -175,7 +175,7 @@ export function generateStory(state: GameState): string | null {
       ? `Its design fell to a lone architect: ${names[0]}.`
       : `Its design fell to a team of ${names.length} architects: ${listNames(names)}.`;
   paragraphs.push(
-    `${codename} is a social news platform by ${company} — a place for people to write, share and read the news. ${teamLine} This is the story of what they built.`
+    `${codename} is a social news platform by ${company}, a place for people to write, share and read the news. ${teamLine} This is the story of what they built.`
   );
 
   // ---- Decisions and events, in play order ----
@@ -264,7 +264,7 @@ export function generateStory(state: GameState): string | null {
     const failed = [...new Set(score.loss?.details.map((d) => d.attribute) ?? [])];
     const failedLine =
       failed.length > 0
-        ? ` The inspectors' report tore into ${listNames(failed)} — each one a wound the architecture could not survive.`
+        ? ` The inspectors' report tore into ${listNames(failed)}, each one a wound the architecture could not survive.`
         : '';
     const lossCloser = pick(rng, [
       `${company} held an emergency board meeting. By end of day, the project was dead.`,
@@ -274,22 +274,18 @@ export function generateStory(state: GameState): string | null {
       `${company} issued a brief internal statement. The team did not need to read it to know what it said.`,
     ] as const);
     paragraphs.push(
-      `Then came the final inspection — and the verdict was merciless: ${codename} had failed. ${score.loss?.summary ?? ''}${failedLine} ${lossCloser}`
+      `Then came the final inspection, and the verdict was merciless: ${codename} had failed. ${score.loss?.summary ?? ''}${failedLine} ${lossCloser}`
     );
   } else {
-    const unaddressed =
-      score.unaddressedConcerns > 0
-        ? ` (${score.unaddressedConcerns} concern${score.unaddressedConcerns === 1 ? ' was' : 's were'} never addressed — ghosts in the backlog, waiting.)`
-        : '';
     const closer = pick(rng, [
-      `And somewhere out there, right now, ${codename} is carrying the news — holding up under the weight of every decision this team ever made.`,
+      `And somewhere out there, right now, ${codename} is carrying the news, holding up under the weight of every decision this team ever made.`,
       `${company} uncorked a bottle in the conference room. ${codename} went live at midnight, and the servers held.`,
       `The team framed the blueprints and hung them on the wall. Months later, they would glance at them and feel something close to pride.`,
-      `${codename} launched without fanfare — and then, slowly, quietly, it became something people relied on. That was enough.`,
+      `${codename} launched without fanfare. Then, slowly, quietly, it became something people relied on. That was enough.`,
       `The file came back approved, and the team sat in stunned silence for a moment before the cheering started. They had built something that worked.`,
     ] as const);
     paragraphs.push(
-      `Then came the final inspection — and it passed. Both the User and the Owner signed off without reservation, and the file came back stamped "${score.grade.toUpperCase()}" — a final score of ${score.finalScore}.${unaddressed} ${closer}`
+      `Then came the final inspection, and it passed. Both the User and the Owner signed off without reservation, and the file came back stamped "${score.grade.toUpperCase()}" with a final score of ${score.finalScore}. ${closer}`
     );
   }
 

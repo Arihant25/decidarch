@@ -205,7 +205,7 @@
 .impactRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-xs);
   padding: 3px 0;
 }
