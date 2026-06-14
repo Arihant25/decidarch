@@ -5,7 +5,10 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { IncomingMessage } from 'http';
 import { URL } from 'url';
-import { ClientMessage, ServerMessage, GameVersion, Impact } from './types';
+import { ClientMessage, ServerMessage, GameVersion, Impact, GameStatePayload } from './types';
+import { CARD_DATA } from './cardData';
+import { ETHICS_CARD_DATA } from './cardDataEthics';
+import { calculateScores, calculateEthicsScore } from './scoring';
 import {
   createRoom,
   joinRoom,
@@ -32,6 +35,8 @@ interface ClientConnection {
   ws: WebSocket;
   playerId: string;
   roomCode: string;
+  /** Spectators watch the live broadcast but hold no seat and can't mutate state. */
+  isSpectator?: boolean;
 }
 
 const connections = new Map<WebSocket, ClientConnection>();
@@ -57,10 +62,24 @@ function sendTo(ws: WebSocket, message: ServerMessage) {
   }
 }
 
+/**
+ * Build the game-state payload. Once the game reaches scoring/finished, attach
+ * the authoritative computed score so programmatic (LLM) clients don't have to
+ * re-implement the scoring rules.
+ */
+function buildGameStatePayload(state: GameStatePayload): GameStatePayload {
+  if (state.phase === 'scoring' || state.phase === 'finished') {
+    const score =
+      state.gameVersion === 'ethics' ? calculateEthicsScore(state) : calculateScores(state);
+    return { ...state, score };
+  }
+  return state;
+}
+
 function broadcastGameState(roomCode: string) {
   const state = getRoom(roomCode);
   if (!state) return;
-  broadcastToRoom(roomCode, { type: 'game-state', payload: state });
+  broadcastToRoom(roomCode, { type: 'game-state', payload: buildGameStatePayload(state) });
 }
 
 // --------------- Message Handlers ---------------
@@ -330,6 +349,38 @@ function handleChatMessage(ws: WebSocket, payload: { text: string }) {
   broadcastToRoom(conn.roomCode, { type: 'chat-message', payload: message });
 }
 
+function handleSpectate(ws: WebSocket, roomCode: string) {
+  const code = roomCode.toUpperCase();
+  const state = getRoom(code);
+  if (!state) {
+    sendTo(ws, { type: 'error', payload: { message: 'Room not found. Check the code and try again.' } });
+    return;
+  }
+
+  // Spectators are not added to state.players, so they never count toward the
+  // player limit/start requirement and host/player checks naturally reject them.
+  const spectatorId = `spectator-${crypto.randomUUID()}`;
+  const conn: ClientConnection = { ws, playerId: spectatorId, roomCode: code, isSpectator: true };
+  connections.set(ws, conn);
+  playerSockets.set(spectatorId, ws);
+
+  // Send the current snapshot so the spectator's board renders immediately.
+  sendTo(ws, { type: 'game-state', payload: buildGameStatePayload(state) });
+}
+
+function handleGetCardData(ws: WebSocket) {
+  // Static card definitions for both modes. Available to any socket (even before
+  // joining a room) so an agent can introspect options/impacts/stakeholders.
+  const conn = connections.get(ws);
+  const gameVersion: GameVersion =
+    (conn && getRoom(conn.roomCode)?.gameVersion) || 'classic';
+
+  sendTo(ws, {
+    type: 'card-data',
+    payload: { gameVersion, classic: CARD_DATA, ethics: ETHICS_CARD_DATA },
+  });
+}
+
 function handleKickPlayer(ws: WebSocket, payload: { playerId: string }) {
   const conn = connections.get(ws);
   if (!conn) return;
@@ -366,6 +417,13 @@ function handleKickPlayer(ws: WebSocket, payload: { playerId: string }) {
 function handleDisconnect(ws: WebSocket) {
   const conn = connections.get(ws);
   if (!conn) return;
+
+  // Spectators hold no seat — just drop the connection, no player-left bookkeeping.
+  if (conn.isSpectator) {
+    playerSockets.delete(conn.playerId);
+    connections.delete(ws);
+    return;
+  }
 
   removePlayerFromRoom(conn.roomCode, conn.playerId);
   playerSockets.delete(conn.playerId);
@@ -414,11 +472,20 @@ export function setupWebSocket(wss: WebSocketServer) {
       }
     } else if (action === 'join' && playerName && roomCode) {
       handleJoin(ws, { roomCode, playerName });
+    } else if (action === 'spectate' && roomCode) {
+      handleSpectate(ws, roomCode);
     }
 
     ws.on('message', (data) => {
       try {
         const message: ClientMessage = JSON.parse(data.toString());
+
+        // Spectators are strictly read-only: the only thing they may ask for is
+        // the static card data. Everything else is silently ignored.
+        const conn = connections.get(ws);
+        if (conn?.isSpectator && message.type !== 'get-card-data') {
+          return;
+        }
 
         switch (message.type) {
           case 'join':
@@ -459,6 +526,9 @@ export function setupWebSocket(wss: WebSocketServer) {
             break;
           case 'kick-player':
             handleKickPlayer(ws, message.payload);
+            break;
+          case 'get-card-data':
+            handleGetCardData(ws);
             break;
           default:
             sendTo(ws, { type: 'error', payload: { message: 'Unknown message type.' } });

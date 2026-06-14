@@ -15,12 +15,25 @@ import { CARD_DATA, EVENT_CARDS } from '@/lib/cardData';
 import { ETHICS_CARD_DATA } from '@/lib/cardDataEthics';
 import styles from './page.module.css';
 
+function SpectatorBanner() {
+  return (
+    <div
+      className={styles.spectatorBanner}
+      aria-live="polite"
+    >
+      <span aria-hidden="true">👁</span>
+      SPECTATING — READ ONLY
+    </div>
+  );
+}
+
 function RoomContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
   const code = (params.code as string)?.toUpperCase();
   const initialName = searchParams.get('name') || '';
+  const isSpectatorMode = searchParams.get('spectate') === '1';
   const initialVersion = searchParams.get('version') as GameVersion | null;
   const [name] = useState(() => {
     if (initialName) return initialName;
@@ -38,9 +51,15 @@ function RoomContent() {
     }
     return '';
   });
-  const { gameState, roomCode, createRoom, joinRoom, error, clearError } = useGame();
+  const { gameState, roomCode, createRoom, joinRoom, spectate, isSpectator, error, clearError } = useGame();
 
   useEffect(() => {
+    // Spectators watch a live game without taking a seat — no name needed.
+    if (isSpectatorMode) {
+      if (code && code !== 'NEW') spectate(code);
+      return;
+    }
+
     if (name && !initialName) {
       // Name came from localStorage — update URL
       router.replace(`/room/${code}?name=${encodeURIComponent(name)}`);
@@ -133,7 +152,7 @@ function RoomContent() {
     }
   }, [currentPhase]);
 
-  if (!name) {
+  if (!name && !isSpectatorMode) {
     if (code === 'NEW') {
       return (
         <div className={styles.errorPage}>
@@ -190,6 +209,18 @@ function RoomContent() {
               Join Room <span aria-hidden="true">→</span>
             </button>
           </form>
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={`btn btn-secondary ${styles.spectatorLink}`}
+              onClick={() => {
+                window.history.replaceState(null, '', `/room/${code}?spectate=1`);
+                spectate(code);
+              }}
+            >
+              Watch as Spectator
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -209,6 +240,18 @@ function RoomContent() {
             <Link href="/" className="btn btn-primary">
               Back to Home
             </Link>
+            {error === 'Game already in progress.' && (
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  window.history.replaceState(null, '', `/room/${code}?spectate=1`);
+                  clearError();
+                  spectate(code);
+                }}
+              >
+                Watch as Spectator
+              </button>
+            )}
             {!isKicked && (
               <button
                 className="btn btn-secondary"
@@ -240,7 +283,12 @@ function RoomContent() {
   }
 
   if (gameState.phase === 'lobby') {
-    return <WaitingRoom />;
+    return (
+      <>
+        {isSpectator && <SpectatorBanner />}
+        <WaitingRoom />
+      </>
+    );
   }
 
   // The concern on the board right now — the intro's face-up card mirrors it
@@ -252,11 +300,12 @@ function RoomContent() {
 
   return (
     <>
+      {isSpectator && <SpectatorBanner />}
       {/* data-dealing hides the live concern card (see globals.css) through
           the tutorial and the deal intro, until the intro's hero card has
           landed in its place */}
       <div
-        style={{ display: 'contents' }}
+        className={styles.gameContents}
         data-dealing={tutorialActive || showDealIntro || undefined}
       >
         <GameBoard tourRevealed={tutorialActive ? tourRevealed : null} />

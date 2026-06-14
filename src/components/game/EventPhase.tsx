@@ -7,19 +7,9 @@ import { CARD_DATA } from '@/lib/cardData';
 import { ETHICS_CARD_DATA } from '@/lib/cardDataEthics';
 import { Impact, IMPACT_VALUES } from '@/lib/types';
 import { isOptionDisabled } from '@/lib/gameEngine';
+import { ImpactBadge } from './ImpactBadge';
 import { Zap } from 'lucide-react';
 import styles from './EventPhase.module.css';
-
-function ImpactBadge({ impact }: { impact: Impact }) {
-  const classMap: Record<string, string> = {
-    '++': 'impact impact-very-positive',
-    '+': 'impact impact-positive',
-    '=': 'impact impact-neutral',
-    '-': 'impact impact-negative',
-    '--': 'impact impact-very-negative',
-  };
-  return <span className={classMap[impact] || 'impact impact-neutral'}>{impact}</span>;
-}
 
 export function EventPhase() {
   const { gameState, isHost, advancePhase, reviseDecision, skipRevision, setPreviewDeltas, updateRevisionDraft } = useGame();

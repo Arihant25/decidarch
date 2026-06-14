@@ -99,6 +99,7 @@
   gap: var(--space-sm);
   justify-content: center;
   flex-wrap: wrap;
+  margin-top: var(--space-lg);
 }
 
 .joinForm {
@@ -171,4 +172,44 @@
   letter-spacing: 0.24em;
   color: var(--faint);
   animation: pulse 1.6s ease-in-out infinite;
+}
+
+.spectatorBanner {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(8, 19, 35, 0.92);
+  border: 1px solid var(--cyan, #54c8ff);
+  border-radius: 999px;
+  color: var(--cyan, #54c8ff);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.cardTextNote {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.spectatorLink {
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.spectatorLink:hover {
+  background: var(--cyan-soft);
+}
+
+.gameContents {
+  display: contents;
 }

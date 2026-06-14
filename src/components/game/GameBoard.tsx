@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import Link from 'next/link';
 import { CARD_DATA } from '@/lib/cardData';
@@ -117,19 +117,8 @@ export function GameBoard({ tourRevealed }: GameBoardProps) {
       {/* Game progress bar — width = cards completed, colour = phase timer urgency */}
       <div className={`${styles.timerBar} ${tourClass('topbar')}`} data-tour="topbar">
         <div
-          className={styles.timerBarFill}
-          style={{
-            width: `${gameState.phase === 'scoring' || gameState.phase === 'finished'
-              ? 100
-              : (gameState.currentConcernIndex / gameState.concernOrder.length) * 100
-              }%`,
-            background:
-              percentage >= 100
-                ? 'var(--red)'
-                : percentage >= 85
-                  ? 'var(--gold)'
-                  : 'var(--mint)',
-          }}
+          className={`${styles.timerBarFill} ${percentage >= 100 ? styles.timerBarDanger : percentage >= 85 ? styles.timerBarWarning : styles.timerBarSafe}`}
+          style={{ '--bar-width': `${gameState.phase === 'scoring' || gameState.phase === 'finished' ? 100 : (gameState.currentConcernIndex / gameState.concernOrder.length) * 100}%` } as React.CSSProperties}
         />
       </div>
 

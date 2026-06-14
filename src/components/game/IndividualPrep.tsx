@@ -1,28 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ConcernCard, EthicsConcernCard, Impact, IMPACT_VALUES } from '@/lib/types';
 import { useGame } from '@/context/GameContext';
 import { isOptionDisabled } from '@/lib/gameEngine';
+import { ImpactBadge } from './ImpactBadge';
 import styles from './IndividualPrep.module.css';
 
 interface Props {
   concern: ConcernCard | EthicsConcernCard;
 }
 
-function ImpactBadge({ impact }: { impact: Impact }) {
-  const classMap: Record<string, string> = {
-    '++': 'impact impact-very-positive',
-    '+': 'impact impact-positive',
-    '=': 'impact impact-neutral',
-    '-': 'impact impact-negative',
-    '--': 'impact impact-very-negative',
-  };
-  return <span className={classMap[impact] || 'impact impact-neutral'}>{impact}</span>;
-}
-
 export function IndividualPrep({ concern }: Props) {
-  const { gameState, playerId, submitDecision, setPreviewDeltas } = useGame();
+  const { gameState, playerId, submitDecision, setPreviewDeltas, isSpectator } = useGame();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [rationale, setRationale] = useState('');
 
@@ -84,15 +74,15 @@ export function IndividualPrep({ concern }: Props) {
         <h2 className={styles.concernTitle}>{concern.title}</h2>
         <p className={styles.concernDesc}>{concern.description}</p>
         {ethicsConcern && (
-          <div style={{ marginTop: '0.75rem', padding: '0.6rem 0.75rem', background: 'rgba(84,200,255,0.06)', border: '1px solid rgba(84,200,255,0.2)', fontSize: '0.78rem' }}>
-            <strong style={{ letterSpacing: '0.08em', fontSize: '0.7rem', opacity: 0.7 }}>SAFEGUARD HINT</strong>
-            <p style={{ marginTop: '0.3rem', opacity: 0.85 }}>{ethicsConcern.safeguardHint}</p>
+          <div className={styles.safeguardHint}>
+            <strong className={styles.safeguardHintLabel}>SAFEGUARD HINT</strong>
+            <p className={styles.safeguardHintText}>{ethicsConcern.safeguardHint}</p>
           </div>
         )}
         {ethicsConcern && (
-          <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+          <div className={styles.affectedValues}>
             {ethicsConcern.affectedValues.map((v) => (
-              <span key={v} style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem', border: '1px solid rgba(141,198,255,0.3)', letterSpacing: '0.06em', opacity: 0.8 }}>
+              <span key={v} className={styles.valueBadge}>
                 {v}
               </span>
             ))}
@@ -100,7 +90,19 @@ export function IndividualPrep({ concern }: Props) {
         )}
       </div>
 
-      {hasSubmitted ? (
+      {isSpectator ? (
+        <div className={styles.submitted}>
+          <span className={styles.stamp}>LIVE</span>
+          <h3>Architects are deciding</h3>
+          <p>PROPOSALS IN — {submittedCount}/{totalPlayers}</p>
+          <div className={styles.progressBar}>
+            <div
+              className={styles.progressFill}
+              style={{ '--progress-width': `${totalPlayers ? (submittedCount / totalPlayers) * 100 : 0}%` } as React.CSSProperties}
+            />
+          </div>
+        </div>
+      ) : hasSubmitted ? (
         <div className={styles.submitted}>
           <span className={styles.stamp}>FILED</span>
           <h3>Decision Submitted</h3>
@@ -108,7 +110,7 @@ export function IndividualPrep({ concern }: Props) {
           <div className={styles.progressBar}>
             <div
               className={styles.progressFill}
-              style={{ width: `${(submittedCount / totalPlayers) * 100}%` }}
+              style={{ '--progress-width': `${(submittedCount / totalPlayers) * 100}%` } as React.CSSProperties}
             />
           </div>
         </div>
@@ -160,7 +162,7 @@ export function IndividualPrep({ concern }: Props) {
                 <button
                   key={option.id}
                   className={`${styles.optionCard} ${selectedOption === option.id ? styles.optionSelected : ''} ${disabled ? styles.optionDisabled : ''} animate-fade-in-up`}
-                  style={{ animationDelay: `${index * 100}ms` }}
+                  style={{ '--anim-delay': `${index * 100}ms` } as React.CSSProperties}
                   onClick={() => {
                     if (disabled) return;
                     setSelectedOption(selectedOption === option.id ? null : option.id);
@@ -188,29 +190,27 @@ export function IndividualPrep({ concern }: Props) {
                 </button>
               );
             })}
-          </div>
 
-          {selectedOption && (
-            <div className={`${styles.rationaleSection} animate-fade-in-up`}>
+            <div className={styles.rationaleSection}>
               <label htmlFor="rationale" className="label">YOUR RATIONALE — WHY THIS OPTION?</label>
               <textarea
                 id="rationale"
                 className="textarea"
-                placeholder="Explain your reasoning..."
+                placeholder={selectedOption ? 'Explain your reasoning...' : 'Select an option first...'}
                 value={rationale}
                 onChange={(e) => setRationale(e.target.value)}
-                rows={3}
+                disabled={!selectedOption}
               />
               <button
                 className={`btn btn-primary btn-lg ${styles.submitBtn}`}
                 onClick={handleSubmitClassic}
-                disabled={!rationale.trim()}
+                disabled={!selectedOption || !rationale.trim()}
                 id="btn-submit-decision"
               >
                 Submit My Decision <span aria-hidden="true">→</span>
               </button>
             </div>
-          )}
+          </div>
         </>
       )}
     </div>

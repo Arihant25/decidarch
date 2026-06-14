@@ -1,0 +1,40 @@
+/* Mermaid diagram wrapper */
+
+.figure {
+    margin: 1.25rem 0;
+}
+
+.figureLarge {
+    margin: 1.5rem 0;
+}
+
+.pre {
+    font-family: var(--font-tech), monospace;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    background: #050d18;
+    border: 1px solid rgba(141, 198, 255, 0.25);
+    border-left: 3px solid #54c8ff;
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    color: #cfe9ff;
+    white-space: pre;
+}
+
+.diagramContainer {
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+}
+
+.figcaption {
+    font-size: 0.78rem;
+    opacity: 0.6;
+    text-align: center;
+    margin-top: 0.4rem;
+}
+
+.figcaptionLarge {
+    margin-top: 0.5rem;
+}

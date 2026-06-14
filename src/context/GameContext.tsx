@@ -12,6 +12,7 @@ interface GameContextValue {
   isConnected: boolean;
   error: string | null;
   isHost: boolean;
+  isSpectator: boolean;
   currentPlayer: Player | null;
   previewDeltas: Record<string, number> | null;
   countdown: number | null;
@@ -19,6 +20,7 @@ interface GameContextValue {
   // Actions
   createRoom: (playerName: string, gameVersion?: GameVersion) => void;
   joinRoom: (roomCode: string, playerName: string) => void;
+  spectate: (roomCode: string) => void;
   startGame: () => void;
   startCountdown: () => void;
   submitDecision: (optionId: string, rationale: string) => void;
@@ -51,9 +53,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [previewDeltas, setPreviewDeltas] = useState<Record<string, number> | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [isSpectator, setIsSpectator] = useState(false);
 
   // Ref so handleMessage can call disconnect() without a stale closure
   const disconnectRef = useRef<(() => void) | null>(null);
+  // Ref so handleMessage can read isSpectator without a stale closure
+  const isSpectatorRef = useRef(false);
 
   const handleMessage = useCallback((message: ServerMessage) => {
     switch (message.type) {
@@ -88,7 +93,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       case 'game-state':
         setGameState(message.payload);
         setCountdown(null);
-        if (message.payload.phase === 'finished' && typeof window !== 'undefined') {
+        if (message.payload.phase === 'finished' && !isSpectatorRef.current && typeof window !== 'undefined') {
           localStorage.removeItem('decidarch_session');
         }
         break;
@@ -143,10 +148,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     onMessage: handleMessage,
   });
 
-  // Keep ref in sync so handleMessage can call disconnect()
+  // Keep refs in sync so handleMessage can access latest values without stale closures
   useEffect(() => {
     disconnectRef.current = disconnect;
   }, [disconnect]);
+
+  useEffect(() => {
+    isSpectatorRef.current = isSpectator;
+  }, [isSpectator]);
 
   const createRoom = useCallback(
     (playerName: string, gameVersion: GameVersion = 'classic') => {
@@ -167,6 +176,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('decidarch_session', JSON.stringify({ roomCode: code.toUpperCase(), playerName }));
       }
       connect({ action: 'join', name: playerName, room: code.toUpperCase() });
+    },
+    [connect]
+  );
+
+  const spectate = useCallback(
+    (code: string) => {
+      setError(null);
+      setIsSpectator(true);
+      setRoomCode(code.toUpperCase());
+      // Spectators connect without a seat; the server replies with a game-state
+      // snapshot and includes them in all subsequent broadcasts (read-only).
+      connect({ action: 'spectate', name: '', room: code.toUpperCase() });
     },
     [connect]
   );
@@ -257,11 +278,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         isConnected,
         error,
         isHost,
+        isSpectator,
         currentPlayer,
         previewDeltas,
         countdown,
         createRoom,
         joinRoom,
+        spectate,
         startGame,
         startCountdown,
         submitDecision,

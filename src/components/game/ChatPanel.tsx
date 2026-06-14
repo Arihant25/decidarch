@@ -12,19 +12,30 @@ interface ChatPanelProps {
 export function ChatPanel({ isCollapsed, onToggle }: ChatPanelProps) {
   const { gameState, playerId, sendChat } = useGame();
   const [text, setText] = useState('');
-  const [seenCount, setSeenCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [prevMsgLen, setPrevMsgLen] = useState(gameState?.chatMessages.length ?? 0);
+  const [prevCollapsed, setPrevCollapsed] = useState(isCollapsed);
   const messagesRef = useRef<HTMLDivElement>(null);
 
+  // Scroll to bottom when messages arrive or panel opens (no setState here)
   useEffect(() => {
     if (isCollapsed) return;
     const el = messagesRef.current;
     el?.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-    setSeenCount(gameState?.chatMessages.length ?? 0);
   }, [gameState?.chatMessages, isCollapsed]);
 
-  const unreadCount = isCollapsed
-    ? Math.max(0, (gameState?.chatMessages.length ?? 0) - seenCount)
-    : 0;
+  // Track unread count via React's "storing info from previous renders" pattern —
+  // setState called during render (not inside an effect) with a bailout guard.
+  const currentLen = gameState?.chatMessages.length ?? 0;
+  if (prevCollapsed !== isCollapsed || prevMsgLen !== currentLen) {
+    setPrevCollapsed(isCollapsed);
+    setPrevMsgLen(currentLen);
+    if (!isCollapsed) {
+      setUnreadCount(0);
+    } else if (currentLen > prevMsgLen) {
+      setUnreadCount(c => c + (currentLen - prevMsgLen));
+    }
+  }
 
   if (!gameState) return null;
 

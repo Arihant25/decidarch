@@ -434,3 +434,9 @@
     grid-template-columns: 1fr;
   }
 }
+
+.note {
+  font-size: 0.72rem;
+  opacity: 0.55;
+  margin-top: 0.5rem;
+}

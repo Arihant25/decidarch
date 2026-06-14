@@ -348,3 +348,28 @@
     transform: translateY(0);
   }
 }
+
+.versionToggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  justify-content: center;
+}
+
+.versionBtn {
+  padding: 0.4rem 1rem;
+  font-family: var(--font-tech, monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  background: transparent;
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.versionBtnActive {
+  background: var(--cyan);
+  color: #07111f;
+}

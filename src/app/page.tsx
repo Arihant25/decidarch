@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -151,6 +151,7 @@ export default function Home() {
         <span className={styles.topbarCell}>DECIDARCH — SOFTWARE ARCHITECTURE DECISION GAME</span>
         <span className={styles.topbarCellWide} aria-hidden="true" />
         <Link href="/rules" className={styles.topbarLink}>HOW TO PLAY</Link>
+        <Link href="/docs" className={styles.topbarLink}>API</Link>
         <span className={styles.topbarCell}>SCALE — NTS</span>
       </header>
 
@@ -410,7 +411,7 @@ export default function Home() {
                 <span
                   key={i}
                   className={styles.authorChar}
-                  style={{ transitionDelay: `${(arr.length - 1 - i) * 15}ms` }}
+                  style={{ '--char-delay': `${(arr.length - 1 - i) * 15}ms` } as React.CSSProperties}
                 >
                   {ch === ' ' ? '\u00A0' : ch}
                 </span>
@@ -432,12 +433,12 @@ export default function Home() {
               const chars = seg.split('');
               return (
                 <Link key={si} href={href} className={styles.authorLink} target="_blank" rel="noopener noreferrer">
-                  <span className={styles.authorName} style={{ display: 'inline' }}>
+                  <span className={`${styles.authorName} ${styles.authorNameInline}`}>
                     {chars.map((ch, i) => (
                       <span
                         key={i}
                         className={styles.authorChar}
-                        style={{ transitionDelay: `${(chars.length - 1 - i) * 15}ms` }}
+                        style={{ '--char-delay': `${(chars.length - 1 - i) * 15}ms` } as React.CSSProperties}
                       >
                         {ch}
                       </span>

@@ -95,7 +95,20 @@
 
 .timerBarFill {
   height: 100%;
+  width: var(--bar-width);
   transition: width 0.6s ease, background 2s ease;
+}
+
+.timerBarSafe {
+  background: var(--mint);
+}
+
+.timerBarWarning {
+  background: var(--gold);
+}
+
+.timerBarDanger {
+  background: var(--red);
 }
 
 /* --------------- Main area --------------- */
@@ -153,7 +166,7 @@
    highlight ring can measure the section mid-animation and still land
    exactly on its settled position */
 .tourReveal:not(.tourSlot),
-.tourSlot.tourReveal > * {
+.tourSlot.tourReveal>* {
   animation: tourReveal 0.5s var(--ease-draft) both;
 }
 
@@ -170,8 +183,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .tourReveal:not(.tourSlot),
-  .tourSlot.tourReveal > * {
+  .tourSlot.tourReveal>* {
     animation: none;
   }
 }

@@ -928,10 +928,15 @@
   text-overflow: ellipsis;
 }
 
+.authorNameInline {
+  display: inline;
+}
+
 .authorChar {
   display: inline;
   color: var(--dim);
   transition: color 40ms linear;
+  transition-delay: var(--char-delay, 0ms);
 }
 
 .authorLink:hover .authorChar {

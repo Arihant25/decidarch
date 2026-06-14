@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useGame } from '@/context/GameContext';
 import { Check, Copy, UserPlus, X } from 'lucide-react';
@@ -117,7 +117,7 @@ export function WaitingRoom() {
               <div
                 key={player.id}
                 className={`${styles.playerCard} animate-fade-in-up`}
-                style={{ animationDelay: `${index * 100}ms` }}
+                style={{ '--anim-delay': `${index * 100}ms` } as React.CSSProperties}
               >
                 <span className={styles.playerIndex}>
                   {String(index + 1).padStart(2, '0')}

@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useGame } from '@/context/GameContext';
 import { ConcernCard, EthicsConcernCard } from '@/lib/types';
 import styles from './GroupReveal.module.css';
@@ -39,7 +40,7 @@ export function GroupReveal({ concern }: Props) {
           <div
             key={decision.playerId}
             className={styles.decisionCard}
-            style={{ animationDelay: `${idx * 150}ms` }}
+            style={{ '--card-delay': `${idx * 150}ms` } as React.CSSProperties}
           >
             <div className={styles.cardHeader}>
               <div className={styles.playerInfo}>
@@ -56,7 +57,7 @@ export function GroupReveal({ concern }: Props) {
             <div className={styles.chosenOption}>
               <span className={styles.optionLabel}>{isEthics ? 'SAFEGUARD PROPOSAL' : 'SUGGESTED'}</span>
               {isEthics
-                ? <p className={styles.rationaleText} style={{ margin: 0 }}>{decision.rationale}</p>
+                ? <p className={`${styles.rationaleText} ${styles.rationaleTextInline}`}>{decision.rationale}</p>
                 : <span className={styles.optionName}>{getOptionName(decision.optionId)}</span>
               }
             </div>

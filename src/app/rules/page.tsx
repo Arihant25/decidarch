@@ -36,23 +36,12 @@ export default function RulesPage() {
           </p>
 
           {/* Version toggle */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', justifyContent: 'center' }}>
+          <div className={styles.versionToggle}>
             {(['classic', 'ethics'] as RulesVersion[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setVersion(v)}
-                style={{
-                  padding: '0.4rem 1rem',
-                  fontFamily: 'var(--font-tech, monospace)',
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.12em',
-                  fontWeight: 700,
-                  background: version === v ? 'var(--accent, #54c8ff)' : 'transparent',
-                  color: version === v ? '#07111f' : 'var(--accent, #54c8ff)',
-                  border: '1px solid var(--accent, #54c8ff)',
-                  cursor: 'pointer',
-                  transition: 'background 0.15s, color 0.15s',
-                }}
+                className={`${styles.versionBtn}${version === v ? ` ${styles.versionBtnActive}` : ''}`}
               >
                 {v === 'classic' ? 'CLASSIC' : 'ETHICS-AWARE'}
               </button>

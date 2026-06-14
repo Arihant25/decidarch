@@ -2,6 +2,10 @@
 // DecidArch — Shared Type Definitions
 // ============================================================
 
+// Type-only import (erased at compile time, so no runtime circular dependency
+// with scoring.ts, which imports from this module).
+import type { GameScore, EthicsScore } from './scoring';
+
 // --------------- Game Version ---------------
 
 export type GameVersion = 'classic' | 'ethics';
@@ -226,10 +230,27 @@ export type ClientMessage =
   | { type: 'skip-revision'; payload: Record<string, never> }
   | { type: 'update-revision-draft'; payload: { concernId?: string | null; optionId?: string | null; rationale?: string } }
   | { type: 'chat-message'; payload: { text: string } }
-  | { type: 'kick-player'; payload: { playerId: string } };
+  | { type: 'kick-player'; payload: { playerId: string } }
+  | { type: 'get-card-data'; payload?: Record<string, never> };
+
+/** Static card definitions for the classic (architecture) mode. */
+export interface ClassicCardData {
+  project: ProjectCard;
+  stakeholders: StakeholderCard[];
+  concerns: ConcernCard[];
+  events: EventCard[];
+}
+
+/**
+ * Game state as broadcast to clients. When the game reaches the `scoring` or
+ * `finished` phase the server attaches the authoritative computed `score`
+ * (classic → GameScore, ethics → EthicsScore) so programmatic clients don't
+ * have to re-implement the scoring rules.
+ */
+export type GameStatePayload = GameState & { score?: GameScore | EthicsScore };
 
 export type ServerMessage =
-  | { type: 'game-state'; payload: GameState }
+  | { type: 'game-state'; payload: GameStatePayload }
   | { type: 'countdown'; payload: { count: number } }
   | { type: 'error'; payload: { message: string } }
   | { type: 'player-joined'; payload: { player: Player } }
@@ -237,4 +258,5 @@ export type ServerMessage =
   | { type: 'player-kicked'; payload: { playerId: string } }
   | { type: 'room-created'; payload: { roomCode: string; playerId: string } }
   | { type: 'joined'; payload: { playerId: string; gameState: GameState } }
-  | { type: 'chat-message'; payload: ChatMessage };
+  | { type: 'chat-message'; payload: ChatMessage }
+  | { type: 'card-data'; payload: { gameVersion: GameVersion; classic: ClassicCardData; ethics: EthicsCardData } };

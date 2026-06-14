@@ -245,7 +245,7 @@ export interface EthicsScore {
 }
 
 export function calculateEthicsScore(state: GameState): EthicsScore {
-  const { stakeholders, concerns } = ETHICS_CARD_DATA;
+  const { stakeholders } = ETHICS_CARD_DATA;
 
   const getVImportance = (stakeholderId: string, valueName: string, baseImportance: number): number =>
     state.stakeholderVImportanceOverrides[stakeholderId]?.[valueName] ?? baseImportance;

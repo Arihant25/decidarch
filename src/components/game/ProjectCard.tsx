@@ -19,7 +19,7 @@ export function ProjectCard({ project }: Props) {
       <h3 className={styles.title}>{project.title}</h3>
       <p className={styles.description}>{project.description}</p>
       {isEthics && (
-        <p className={styles.description} style={{ marginTop: '0.5rem', fontStyle: 'italic', opacity: 0.85 }}>
+        <p className={`${styles.description} ${styles.purpose}`}>
           {(project as EthicsProjectCard).purpose}
         </p>
       )}

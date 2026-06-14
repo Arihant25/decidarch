@@ -26,7 +26,7 @@ export function CurrentStats() {
         <div className={styles.list}>
           {score.stakeholderScores.map((s) => (
             <div key={s.stakeholderId} className={styles.statRow}>
-              <span className={styles.attrName} style={{ fontSize: '0.7rem' }}>
+              <span className={`${styles.attrName} ${styles.attrNameSmall}`}>
                 {s.name ?? s.category.split('(')[0].trim()}
               </span>
               <span className={`${styles.statTotal} ${s.totalContribution >= 0 ? styles.statPositive : styles.statNegative}`}>
@@ -34,7 +34,7 @@ export function CurrentStats() {
               </span>
             </div>
           ))}
-          <div className={`${styles.statRow}`} style={{ borderTop: '1px solid rgba(141,198,255,0.15)', marginTop: '0.25rem', paddingTop: '0.25rem' }}>
+          <div className={`${styles.statRow} ${styles.statRowSeparator}`}>
             <span className={styles.attrName}>TOTAL</span>
             <span className={`${styles.statTotal} ${score.finalScore >= 0 ? styles.statPositive : styles.statNegative}`}>
               {score.finalScore > 0 ? `+${score.finalScore}` : score.finalScore}

@@ -52,3 +52,9 @@
   color: var(--dim);
   line-height: 1.5;
 }
+
+.purpose {
+  margin-top: 0.5rem;
+  font-style: italic;
+  opacity: 0.85;
+}

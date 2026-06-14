@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, MotionConfig } from 'motion/react';
 import { ConcernCard, EthicsConcernCard, GameVersion } from '@/lib/types';
 import styles from './DealIntro.module.css';
@@ -284,7 +284,7 @@ export function DealIntro({ cardCount, roomCode, gameVersion, concern, onComplet
               <motion.div
                 key={d}
                 className={styles.deckCard}
-                style={{ top: -d * 2.5, zIndex: d }}
+                style={{ '--deck-top': `${-d * 2.5}px`, '--deck-z': d } as React.CSSProperties}
                 initial={{ rotate: jitter(d + 9) * 2 }}
                 animate={
                   step === STEP_DECK
@@ -340,7 +340,7 @@ export function DealIntro({ cardCount, roomCode, gameVersion, concern, onComplet
               <motion.div
                 key={i}
                 className={styles.card}
-                style={{ zIndex: isHero && step >= STEP_FLIP ? 45 : 10 + i }}
+                style={{ '--card-z': isHero && step >= STEP_FLIP ? 45 : 10 + i } as React.CSSProperties}
                 initial={{ ...deckPose, ...(isHero ? { width: cardW, height: cardH } : {}) }}
                 animate={pose}
                 exit={
@@ -389,9 +389,9 @@ export function DealIntro({ cardCount, roomCode, gameVersion, concern, onComplet
                       <span className={styles.faceNumber}>{String(i + 1).padStart(2, '0')}</span>
                       <span className={styles.faceLabel}>{concernLabel}</span>
                       <span className={styles.faceRedacted} aria-hidden="true">
-                        <i style={{ width: '82%' }} />
-                        <i style={{ width: '58%' }} />
-                        <i style={{ width: '70%' }} />
+                        <i />
+                        <i />
+                        <i />
                       </span>
                       <span className={styles.faceHatch} aria-hidden="true" />
                     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react
 import { ConcernCard, EthicsConcernCard, Impact, IMPACT_VALUES } from '@/lib/types';
 import { useGame } from '@/context/GameContext';
 import { isOptionDisabled } from '@/lib/gameEngine';
+import { ImpactBadge } from './ImpactBadge';
 import styles from './GroupDecision.module.css';
 
 interface Props {
@@ -12,19 +13,8 @@ interface Props {
 
 const IMPACT_OPTIONS: Impact[] = ['++', '+', '-', '--'];
 
-function ImpactBadge({ impact }: { impact: Impact }) {
-  const classMap: Record<string, string> = {
-    '++': 'impact impact-very-positive',
-    '+': 'impact impact-positive',
-    '=': 'impact impact-neutral',
-    '-': 'impact impact-negative',
-    '--': 'impact impact-very-negative',
-  };
-  return <span className={classMap[impact] || 'impact impact-neutral'}>{impact}</span>;
-}
-
 export function GroupDecision({ concern }: Props) {
-  const { gameState, isHost, submitGroupDecision, selectGroupOption, setPreviewDeltas, updateGroupDraft } = useGame();
+  const { gameState, isHost, submitGroupDecision, selectGroupOption, setPreviewDeltas, updateGroupDraft, isSpectator } = useGame();
 
   // Local state mirrors the shared draft; we initialise from server state
   const [rationale, setRationale] = useState(gameState?.groupDraftRationale ?? '');
@@ -134,33 +124,27 @@ export function GroupDecision({ concern }: Props) {
               placeholder="Describe the group's agreed safeguard..."
               value={rationale}
               onChange={(e) => handleRationaleChange(e.target.value)}
+              readOnly={isSpectator}
               rows={3}
             />
 
-            <div style={{ marginTop: '1rem' }}>
-              <p className="label" style={{ marginBottom: '0.5rem' }}>
+            <div className={styles.valueRatingSection}>
+              <p className={`label ${styles.valueRatingLabel}`}>
                 RATE IMPACT ON AFFECTED VALUES
               </p>
-              <p style={{ fontSize: '0.75rem', opacity: 0.6, marginBottom: '0.75rem' }}>
+              <p className={styles.valueRatingHint}>
                 How does the chosen safeguard affect each value? (++ very positive … -- very negative)
               </p>
               {ethicsConcern.affectedValues.map((valueName) => (
-                <div key={valueName} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid rgba(141,198,255,0.1)' }}>
-                  <span style={{ fontSize: '0.8rem', letterSpacing: '0.05em' }}>{valueName}</span>
-                  <div style={{ display: 'flex', gap: '0.35rem' }}>
+                <div key={valueName} className={styles.valueRow}>
+                  <span className={styles.valueName}>{valueName}</span>
+                  <div className={styles.impactButtons}>
                     {IMPACT_OPTIONS.map((imp) => (
                       <button
                         key={imp}
                         type="button"
-                        className={`impact impact-${imp === '++' ? 'very-positive' : imp === '+' ? 'positive' : imp === '-' ? 'negative' : 'very-negative'}`}
-                        style={{
-                          cursor: 'pointer',
-                          outline: valueImpacts[valueName] === imp ? '2px solid var(--cyan)' : 'none',
-                          outlineOffset: '2px',
-                          opacity: valueImpacts[valueName] === imp ? 1 : 0.45,
-                          transition: 'opacity 0.15s, outline 0.15s',
-                        }}
-                        onClick={() => handleValueImpactToggle(valueName, imp)}
+                        className={`impact impact-${imp === '++' ? 'very-positive' : imp === '+' ? 'positive' : imp === '-' ? 'negative' : 'very-negative'} ${styles.impactBtn} ${valueImpacts[valueName] === imp ? styles.impactBtnSelected : ''}`}
+                        onClick={() => { if (!isSpectator) handleValueImpactToggle(valueName, imp); }}
                       >
                         {imp}
                       </button>
@@ -175,15 +159,13 @@ export function GroupDecision({ concern }: Props) {
                 className={`btn btn-success btn-lg ${styles.confirmBtn}`}
                 onClick={handleSubmitEthics}
                 disabled={!rationale.trim()}
-                style={{ marginTop: '1rem' }}
               >
                 Confirm Group Safeguard <span aria-hidden="true">→</span>
               </button>
             ) : (
               <button
-                className={`btn btn-success btn-lg ${styles.confirmBtn}`}
+                className={`btn btn-success btn-lg ${styles.confirmBtn} ${styles.confirmBtnDisabled}`}
                 disabled
-                style={{ marginTop: '1rem', opacity: 0.4, cursor: 'not-allowed' }}
               >
                 Only host can continue
               </button>
@@ -208,57 +190,55 @@ export function GroupDecision({ concern }: Props) {
         </p>
       </div>
 
-      <div className={styles.content}>
-        <div className={styles.optionsList}>
-          {classicConcern!.designOptions.map((option, index) => {
-            const disabled = isOptionDisabled(gameState, option.id);
-            return (
-              <div
-                key={option.id}
-                className={`${styles.optionCard} ${selectedOption === option.id ? styles.optionSelected : ''} ${disabled ? styles.optionDisabled : ''}`}
-                onClick={() => {
-                  if (!disabled) {
-                    selectGroupOption(selectedOption === option.id ? null : option.id);
-                  }
-                }}
-              >
-                <div className={styles.optionHeader}>
-                  <span className={styles.optionNumber}>OPT {String(index + 1).padStart(2, '0')}</span>
-                  {selectedOption === option.id && <span className={styles.selectedBadge}>CHOSEN</span>}
-                </div>
-                <h4 className={styles.optionName}>{option.name}</h4>
-                <p className={styles.optionDesc}>{option.description}</p>
-                <div className={styles.impactGrid}>
-                  {allAttributes.map((attr) => {
-                    const impactVal = (option.impacts[attr] || '=') as Impact;
-                    return (
-                      <div key={attr} className={styles.impactRow}>
-                        <ImpactBadge impact={impactVal} />
-                        <span className={styles.impactAttr}>{attr}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                {(() => {
-                  const decisionsForOption = Object.values(gameState.individualDecisions).filter(d => d.optionId === option.id);
-                  if (decisionsForOption.length === 0) return null;
+      <div className={styles.classicGrid}>
+        {classicConcern!.designOptions.map((option, index) => {
+          const disabled = isOptionDisabled(gameState, option.id);
+          return (
+            <div
+              key={option.id}
+              className={`${styles.optionCard} ${selectedOption === option.id ? styles.optionSelected : ''} ${disabled ? styles.optionDisabled : ''}`}
+              onClick={() => {
+                if (!disabled && !isSpectator) {
+                  selectGroupOption(selectedOption === option.id ? null : option.id);
+                }
+              }}
+            >
+              <div className={styles.optionHeader}>
+                <span className={styles.optionNumber}>OPT {String(index + 1).padStart(2, '0')}</span>
+                {selectedOption === option.id && <span className={styles.selectedBadge}>CHOSEN</span>}
+              </div>
+              <h4 className={styles.optionName}>{option.name}</h4>
+              <p className={styles.optionDesc}>{option.description}</p>
+              <div className={styles.impactGrid}>
+                {allAttributes.map((attr) => {
+                  const impactVal = (option.impacts[attr] || '=') as Impact;
                   return (
-                    <div className={styles.optionComments}>
-                      <p className={styles.commentsLabel}>ARCHITECT COMMENTS</p>
-                      <ul className={styles.commentsList}>
-                        {decisionsForOption.map(d => (
-                          <li key={d.playerId} className={styles.commentItem}>
-                            <strong>{d.playerName}:</strong> &ldquo;{d.rationale}&rdquo;
-                          </li>
-                        ))}
-                      </ul>
+                    <div key={attr} className={styles.impactRow}>
+                      <ImpactBadge impact={impactVal} />
+                      <span className={styles.impactAttr}>{attr}</span>
                     </div>
                   );
-                })()}
+                })}
               </div>
-            );
-          })}
-        </div>
+              {(() => {
+                const decisionsForOption = Object.values(gameState.individualDecisions).filter(d => d.optionId === option.id);
+                if (decisionsForOption.length === 0) return null;
+                return (
+                  <div className={styles.optionComments}>
+                    <p className={styles.commentsLabel}>ARCHITECT COMMENTS</p>
+                    <ul className={styles.commentsList}>
+                      {decisionsForOption.map(d => (
+                        <li key={d.playerId} className={styles.commentItem}>
+                          <strong>{d.playerName}:</strong> &ldquo;{d.rationale}&rdquo;
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
+            </div>
+          );
+        })}
 
         <div className={styles.submissionPanel}>
           <label className="label">GROUP RATIONALE</label>
@@ -267,6 +247,7 @@ export function GroupDecision({ concern }: Props) {
             placeholder="Why did the group choose this option?"
             value={rationale}
             onChange={(e) => handleRationaleChange(e.target.value)}
+            readOnly={isSpectator}
             rows={4}
           />
           {isHost ? (
@@ -279,9 +260,8 @@ export function GroupDecision({ concern }: Props) {
             </button>
           ) : (
             <button
-              className={`btn btn-success btn-lg ${styles.confirmBtn}`}
+              className={`btn btn-success btn-lg ${styles.confirmBtn} ${styles.confirmBtnDisabled}`}
               disabled
-              style={{ opacity: 0.4, cursor: 'not-allowed' }}
             >
               Only host can continue
             </button>

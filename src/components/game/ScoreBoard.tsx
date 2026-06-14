@@ -34,7 +34,7 @@ export function ScoreBoard() {
           >
             {score.grade.split(' ').map((w, i) => <span key={i}>{w}<br /></span>)}
           </span>
-          <p style={{ fontSize: '0.72rem', opacity: 0.55, marginTop: '0.5rem' }}>
+          <p className={styles.note}>
             Note: This score is a digital approximation. The physical game uses qualitative reflection.
           </p>
         </div>

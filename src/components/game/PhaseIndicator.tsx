@@ -28,10 +28,10 @@ export function PhaseIndicator({ phase, concernIndex, totalConcerns }: Props) {
     : Math.min(concernIndex + 1, totalConcerns);
 
   return (
-    <div className={styles.indicator}>
-      <span className={styles.tick} style={{ background: config.color }} aria-hidden="true" />
-      <span className={styles.icon} style={{ color: config.color }}>{config.icon}</span>
-      <span className={styles.label} style={{ color: config.color }}>
+    <div className={styles.indicator} style={{ '--phase-color': config.color } as React.CSSProperties}>
+      <span className={styles.tick} aria-hidden="true" />
+      <span className={styles.icon}>{config.icon}</span>
+      <span className={styles.label}>
         {config.label}
       </span>
       {phase !== 'scoring' && phase !== 'finished' && (
