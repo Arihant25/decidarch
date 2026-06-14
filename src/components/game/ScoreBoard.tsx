@@ -40,7 +40,7 @@ export function ScoreBoard() {
         </div>
 
         <div className={styles.grid}>
-          <div className={styles.section}>
+          <div className={`${styles.section} ${styles.sectionFull}`}>
             <h3><i>01</i> STAKEHOLDER CONTRIBUTIONS</h3>
             <p className={styles.helpText}>V-importance × safeguard impact per value</p>
             <div className={styles.stakeholders}>

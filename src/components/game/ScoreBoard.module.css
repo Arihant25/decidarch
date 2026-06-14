@@ -1,7 +1,7 @@
 /* Score Board — final inspection sheet */
 
 .container {
-  max-width: 800px;
+  max-width: 1100px;
   margin: 0 auto;
   padding-bottom: var(--space-2xl);
 }
@@ -182,6 +182,10 @@
   padding: var(--space-lg);
 }
 
+.sectionFull {
+  grid-column: 1 / -1;
+}
+
 .section h3,
 .finalCalc h3 {
   font-family: var(--font-mono);
@@ -265,8 +269,8 @@
 
 /* Stakeholders */
 .stakeholders {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: var(--space-md);
 }
 
@@ -438,5 +442,5 @@
 .note {
   font-size: 0.72rem;
   opacity: 0.55;
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
 }
