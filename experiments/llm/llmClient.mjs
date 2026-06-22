@@ -18,13 +18,14 @@ export function createLLM({ model, baseUrl = VLLM_BASE_URL, log = () => {} }) {
   // response, per-call token usage) for the replication package.
   const transcript = [];
 
-  async function rawChat(messages, { temperature, label = '' } = {}) {
+  async function rawChat(messages, { temperature, label = '', maxTokens = GEN.maxTokens } = {}) {
     const body = {
       model,
       messages,
       temperature,
-      // No max_tokens: the model generates until it naturally stops — the
-      // harness never imposes an output-length limit.
+      // Generous safety-rail cap (see config.GEN.maxTokens) — stops rambles,
+      // never clips a normal concise answer. No word-count hints in the prompts.
+      max_tokens: maxTokens,
       // vLLM passes this through to the chat template. Both gemma4 and
       // Qwen3 templates honour enable_thinking; harmless if ignored.
       chat_template_kwargs: { enable_thinking: GEN.enableThinking },

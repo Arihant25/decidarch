@@ -40,9 +40,11 @@ export const GEN = {
   enableThinking: false,
   tempAdvocacy: 0.7, // proposals, debate turns, votes — want diversity
   tempFacilitator: 0.3, // neutral synthesis / revision — want consistency
-  // No max_tokens cap is sent: agents generate until they naturally stop, so
-  // output length is never imposed by the harness. The only physical ceiling
-  // is the model's context window (per-concern prompts stay well within it).
+  // Generous safety rail (NOT a content limit): a normal concise answer is a few
+  // hundred tokens and finishes well within this; the cap only stops pathological
+  // multi-thousand-token rambles that otherwise make uncapped runs take days.
+  // Prompts carry no word-count hints — only this hard ceiling.
+  maxTokens: 2048,
 };
 
 // Debate pattern: how many discussion turns each agent takes after the
