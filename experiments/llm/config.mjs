@@ -16,7 +16,10 @@ export const VLLM_BASE_URL = process.env.VLLM_BASE_URL || 'http://localhost:8000
 // gemma is studied first, then qwen (see README).
 export const MODELS = {
   gemma: process.env.GEMMA_MODEL || 'google/gemma-4-26B-A4B-it',
-  qwen: process.env.QWEN_MODEL || 'Qwen/Qwen3.6-27B',
+  // MoE (~3B active): chosen over the 27B dense because the GB10's ~273 GB/s
+  // unified memory makes a dense 27B bandwidth-bound (~5 tok/s); the MoE runs
+  // at gemma-like speed.
+  qwen: process.env.QWEN_MODEL || 'Qwen/Qwen3.6-35B-A3B',
 };
 
 // The four patterns from the Agent Design Pattern Catalogue

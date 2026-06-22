@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# Serve Qwen/Qwen3.6-27B on vLLM for the qwen phase of the study.
+# Serve Qwen/Qwen3.6-35B-A3B (MoE) on vLLM for the qwen phase of the study.
 # ============================================================
 # GATED: the Spark holds only one model in memory at a time, so the
 # gemma serve on :8000 must be stopped first (and the shared GPU must
@@ -12,7 +12,7 @@
 set -euo pipefail
 
 PORT=8000
-MODEL="Qwen/Qwen3.6-27B"
+MODEL="Qwen/Qwen3.6-35B-A3B"
 
 if curl -sf "http://localhost:${PORT}/v1/models" >/dev/null 2>&1; then
   echo "ERROR: something is already serving on :${PORT} (likely the gemma vLLM)."
@@ -26,5 +26,5 @@ fi
 exec vllm serve "${MODEL}" \
   --host 0.0.0.0 --port "${PORT}" \
   --gpu-memory-utilization 0.85 \
-  --max-model-len 16384 \
+  --max-model-len 32768 \
   --max-num-batched-tokens 8192

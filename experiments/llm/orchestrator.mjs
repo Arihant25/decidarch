@@ -8,7 +8,7 @@
 //
 // Usage:
 //   node orchestrator.mjs --model gemma --pattern debate --run-id 1
-//   node orchestrator.mjs --model Qwen/Qwen3.6-27B --pattern voting --run-id 3
+//   node orchestrator.mjs --model Qwen/Qwen3.6-35B-A3B --pattern voting --run-id 3
 //
 // Env: GAME_HOST, VLLM_BASE_URL, PYTHON, GPU_BUSY_W (gate threshold, watts)
 
