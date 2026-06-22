@@ -26,8 +26,16 @@ fi
 
 # Modest context: the experiment prompts are only a few-K tokens, so a small
 # max-model-len keeps KV-cache memory comfortable.
-exec vllm serve "${MODEL}" \
+# --enforce-eager: skip torch.compile + CUDA-graph capture (their memory spikes
+#   OOM'd this box; negligible speed loss when decode is bandwidth-bound).
+# --limit-mm-per-prompt 0: this checkpoint is multimodal; disabling image/video
+#   profiling avoids a large startup memory spike (text-only study).
+# HF_HUB_OFFLINE=1: serve from cache, immune to transient DNS blips.
+exec env HF_HUB_OFFLINE=1 vllm serve "${MODEL}" \
   --host 0.0.0.0 --port "${PORT}" \
+  --served-model-name "${MODEL}" \
+  --enforce-eager \
+  --limit-mm-per-prompt '{"image":0,"video":0}' \
   --gpu-memory-utilization 0.85 \
   --max-model-len 16384 \
   --max-num-batched-tokens 4096
