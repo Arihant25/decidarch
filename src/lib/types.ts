@@ -186,6 +186,8 @@ export interface Player {
 
 export interface GameState {
   roomCode: string;
+  /** Optional deterministic-deal seed (set at room creation; experiments only). */
+  seed?: string;
   phase: GamePhase;
   players: Player[];
   maxPlayers: number;

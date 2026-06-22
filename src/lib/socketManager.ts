@@ -154,7 +154,7 @@ function handleStartCountdown(ws: WebSocket) {
   setTimeout(() => {
     const currentState = getRoom(roomCode);
     if (!currentState || currentState.phase !== 'lobby') return;
-    const gameState = createGame(roomCode, currentState.players, currentState.gameVersion);
+    const gameState = createGame(roomCode, currentState.players, currentState.gameVersion, currentState.seed);
     updateRoom(roomCode, gameState);
     const { state: withMsg } = addSystemMessage(gameState, 'Game started! Review the concern card and prepare your decision.');
     updateRoom(roomCode, withMsg);
@@ -181,7 +181,7 @@ function handleStartGame(ws: WebSocket) {
     return;
   }
 
-  const gameState = createGame(conn.roomCode, state.players, state.gameVersion);
+  const gameState = createGame(conn.roomCode, state.players, state.gameVersion, state.seed);
   updateRoom(conn.roomCode, gameState);
 
   const { state: withMsg } = addSystemMessage(gameState, 'Game started! Review the concern card and prepare your decision.');
@@ -456,10 +456,11 @@ export function setupWebSocket(wss: WebSocketServer) {
     const playerName = url.searchParams.get('name');
     const roomCode = url.searchParams.get('room');
     const roomVersion = url.searchParams.get('version');
+    const seed = url.searchParams.get('seed') || undefined;
 
     if (action === 'create' && playerName) {
       const safeVersion: GameVersion = roomVersion === 'ethics' ? 'ethics' : 'classic';
-      const { roomCode: newCode, playerId } = createRoom(playerName, safeVersion);
+      const { roomCode: newCode, playerId } = createRoom(playerName, safeVersion, seed);
       const state = getRoom(newCode);
 
       const conn: ClientConnection = { ws, playerId, roomCode: newCode };

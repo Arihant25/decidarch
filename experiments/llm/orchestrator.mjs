@@ -84,8 +84,12 @@ async function main() {
   const busyW = Number(process.env.GPU_BUSY_W || 80);
   if (baseW > busyW) log(`⚠️  baseline GPU power ${baseW.toFixed(1)} W > ${busyW} W — another workload may be running; energy will be contaminated.`);
 
+  // Deterministic deal: every pattern/model in repetition k shares this seed,
+  // so the concern/event order is identical across the cell (paired comparison).
+  const seed = `${process.env.SEED_BASE || 'decidarch'}-${args.version}-run${runId}`;
+
   const llm = createLLM({ model: modelId, log });
-  const table = new Table(patternMod.seatNames, { log });
+  const table = new Table(patternMod.seatNames, { log, seed });
   await table.seatEveryone(args.version);
   log(`Room ${table.roomCode} | model=${modelId} | pattern=${pattern} | run=${runId} | seats=${patternMod.seatNames.join(',')}`);
   log(`Spectate: http://${GAME_HOST}/room/${table.roomCode}?spectate=1`);
@@ -114,6 +118,7 @@ async function main() {
     model: modelId,
     pattern,
     run_id: runId,
+    seed,
     grade: score.grade ?? 'unknown',
     final_score: score.finalScore ?? null,
     lost: score.lost ?? null,

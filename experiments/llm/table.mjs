@@ -17,10 +17,11 @@ export class Table {
   /**
    * @param seatNames first name is the host; the rest join in order.
    */
-  constructor(seatNames, { log = () => {} } = {}) {
+  constructor(seatNames, { log = () => {}, seed } = {}) {
     this.seatNames = seatNames;
     this.hostName = seatNames[0];
     this.log = log;
+    this.seed = seed; // deterministic-deal seed (sent on the create URL)
     this.sockets = {}; // name -> ws
     this.playerIds = {}; // name -> playerId
     this.roomCode = null;
@@ -67,7 +68,8 @@ export class Table {
   /** Create the room as host, fetch the deck, return the room code. */
   connectHost(version = 'classic') {
     return new Promise((resolve, reject) => {
-      const ws = new WebSocket(`ws://${GAME_HOST}/ws?action=create&name=${this.hostName}&version=${version}`);
+      const seedParam = this.seed ? `&seed=${encodeURIComponent(this.seed)}` : '';
+      const ws = new WebSocket(`ws://${GAME_HOST}/ws?action=create&name=${this.hostName}&version=${version}${seedParam}`);
       this.sockets[this.hostName] = ws;
       ws.on('error', reject);
       ws.on('message', (raw) => {

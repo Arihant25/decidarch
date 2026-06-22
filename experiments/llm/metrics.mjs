@@ -26,7 +26,7 @@ export const energyRead = () => probe(['read']);
 export const baselinePower = (secs = 3) => probe(['baseline', '--secs', String(secs)]);
 
 const CSV_COLUMNS = [
-  'timestamp', 'model', 'pattern', 'run_id', 'grade', 'final_score', 'lost',
+  'timestamp', 'model', 'pattern', 'run_id', 'seed', 'grade', 'final_score', 'lost',
   'energy_j', 'wall_s', 'avg_power_w', 'input_tokens', 'output_tokens',
   'llm_calls', 'llm_failures', 'n_agents', 'baseline_power_w', 'concern_order',
 ];

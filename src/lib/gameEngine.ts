@@ -19,14 +19,36 @@ import { ETHICS_CARD_DATA } from './cardDataEthics';
 
 // --------------- Helpers ---------------
 
-/** Shuffle array in-place (Fisher-Yates) */
-function shuffle<T>(array: T[]): T[] {
+/** Shuffle array in-place (Fisher-Yates) using the supplied RNG. */
+function shuffle<T>(array: T[], rng: () => number = Math.random): T[] {
   const a = [...array];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+/**
+ * Deterministic RNG (mulberry32) seeded from a string. Lets the deck order be
+ * reproduced exactly across games — used by experiments so different patterns
+ * face the identical concern/event deal. With no seed, falls back to Math.random
+ * (unchanged default behaviour).
+ */
+function makeRng(seed?: string): () => number {
+  if (!seed) return Math.random;
+  let h = 1779033703 ^ seed.length;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  let a = h >>> 0;
+  return function () {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
 // --------------- Game Creation ---------------
@@ -34,14 +56,17 @@ function shuffle<T>(array: T[]): T[] {
 export function createGame(
   roomCode: string,
   players: Player[],
-  gameVersion: GameVersion = 'classic'
+  gameVersion: GameVersion = 'classic',
+  seed?: string
 ): GameState {
   const cardData = gameVersion === 'ethics' ? ETHICS_CARD_DATA : CARD_DATA;
-  const shuffledConcerns = shuffle(cardData.concerns.map((c) => c.id));
-  const shuffledEvents = shuffle(cardData.events.map((e) => e.id));
+  const rng = makeRng(seed);
+  const shuffledConcerns = shuffle(cardData.concerns.map((c) => c.id), rng);
+  const shuffledEvents = shuffle(cardData.events.map((e) => e.id), rng);
 
   return {
     roomCode,
+    seed,
     phase: 'individual-prep',
     players,
     maxPlayers: 8,

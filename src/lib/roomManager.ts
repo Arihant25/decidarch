@@ -27,7 +27,7 @@ setInterval(() => {
   }
 }, 60_000); // check every minute
 
-export function createRoom(hostName: string, gameVersion: GameVersion = 'classic'): { roomCode: string; playerId: string } {
+export function createRoom(hostName: string, gameVersion: GameVersion = 'classic', seed?: string): { roomCode: string; playerId: string } {
   let roomCode = generateCode();
   // Ensure uniqueness
   while (rooms.has(roomCode)) {
@@ -44,6 +44,7 @@ export function createRoom(hostName: string, gameVersion: GameVersion = 'classic
 
   const state: GameState = {
     roomCode,
+    seed,
     phase: 'lobby',
     players: [host],
     maxPlayers: 8,
