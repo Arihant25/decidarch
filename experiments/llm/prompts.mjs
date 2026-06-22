@@ -126,7 +126,7 @@ export function debateTurnUser(deck, state, concern, proposals, chatSoFar, qa) {
     .map((p) => `- ${p.name} (${p.qa}) proposed "${optName(concern, p.optionId)}": ${p.rationale}`)
     .join('\n');
   const chat = chatSoFar.length ? chatSoFar.map((c) => `${c.name}: ${c.text}`).join('\n') : '(no discussion yet)';
-  return `${contextBlock(deck, state)}\n\n${cb.text}\n\nThe team's private proposals were:\n${props}\n\nDiscussion so far:\n${chat}\n\nPHASE: GROUP DISCUSSION. You champion ${qa}. React to the others, defend your attribute or concede where the team is at risk, and move the team toward one option. Plain text only — do NOT output JSON.`;
+  return `${contextBlock(deck, state)}\n\n${cb.text}\n\nThe team's private proposals were:\n${props}\n\nDiscussion so far:\n${chat}\n\nPHASE: GROUP DISCUSSION. You champion ${qa}. React to the others, defend your attribute or concede where the team is at risk, and move the team toward one option. Keep it focused — at most a few short paragraphs (under ~300 words). Plain text only — do NOT output JSON.`;
 }
 
 export function voteUser(deck, state, concern, proposals, qa) {
