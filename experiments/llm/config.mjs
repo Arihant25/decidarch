@@ -51,6 +51,10 @@ export const GEN = {
   // multi-thousand-token rambles that otherwise make uncapped runs take days.
   // Prompts carry no word-count hints — only this hard ceiling.
   maxTokens: 2048,
+  // Debate chat turns get a tighter cap: every turn is replayed into the next
+  // agent's prompt, so unbounded turns overflow the context window. 512 tokens
+  // (~380 words) is still a full multi-point argument.
+  maxTokensDebateTurn: 512,
 };
 
 // Debate pattern: how many discussion turns each agent takes after the

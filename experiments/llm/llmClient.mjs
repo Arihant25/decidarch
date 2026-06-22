@@ -69,8 +69,8 @@ export function createLLM({ model, baseUrl = VLLM_BASE_URL, log = () => {} }) {
   }
 
   /** Free-text completion (used for debate chat turns). */
-  async function text(messages, { temperature = GEN.tempAdvocacy, label = '' } = {}) {
-    return rawChat(messages, { temperature, label });
+  async function text(messages, { temperature = GEN.tempAdvocacy, label = '', maxTokens } = {}) {
+    return rawChat(messages, { temperature, label, maxTokens });
   }
 
   /**
