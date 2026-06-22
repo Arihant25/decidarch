@@ -42,3 +42,6 @@ next-env.d.ts
 
 # paper draft — never commit (per author request)
 paper/
+
+# experiment handoff notes — never commit (machine-specific, per author request)
+experiments/llm/AGENTS.md
