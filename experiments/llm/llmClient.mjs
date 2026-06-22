@@ -14,13 +14,17 @@ import { VLLM_BASE_URL, GEN } from './config.mjs';
  */
 export function createLLM({ model, baseUrl = VLLM_BASE_URL, log = () => {} }) {
   const usage = { promptTokens: 0, completionTokens: 0, calls: 0, failures: 0 };
+  // Full, ordered record of every LLM interaction in the game (prompt messages,
+  // response, per-call token usage) for the replication package.
+  const transcript = [];
 
-  async function rawChat(messages, { temperature, maxTokens }) {
+  async function rawChat(messages, { temperature, label = '' } = {}) {
     const body = {
       model,
       messages,
       temperature,
-      max_tokens: maxTokens,
+      // No max_tokens: the model generates until it naturally stops — the
+      // harness never imposes an output-length limit.
       // vLLM passes this through to the chat template. Both gemma4 and
       // Qwen3 templates honour enable_thinking; harmless if ignored.
       chat_template_kwargs: { enable_thinking: GEN.enableThinking },
@@ -45,6 +49,15 @@ export function createLLM({ model, baseUrl = VLLM_BASE_URL, log = () => {} }) {
         usage.completionTokens += u.completion_tokens || 0;
         usage.calls += 1;
         const content = json.choices?.[0]?.message?.content ?? '';
+        transcript.push({
+          call: usage.calls,
+          label,
+          temperature,
+          messages,
+          response: content.trim(),
+          prompt_tokens: u.prompt_tokens || 0,
+          completion_tokens: u.completion_tokens || 0,
+        });
         return content.trim();
       } catch (err) {
         lastErr = err;
@@ -55,8 +68,8 @@ export function createLLM({ model, baseUrl = VLLM_BASE_URL, log = () => {} }) {
   }
 
   /** Free-text completion (used for debate chat turns). */
-  async function text(messages, { temperature = GEN.tempAdvocacy, maxTokens = GEN.maxTokensDebate } = {}) {
-    return rawChat(messages, { temperature, maxTokens });
+  async function text(messages, { temperature = GEN.tempAdvocacy, label = '' } = {}) {
+    return rawChat(messages, { temperature, label });
   }
 
   /**
@@ -65,11 +78,11 @@ export function createLLM({ model, baseUrl = VLLM_BASE_URL, log = () => {} }) {
    * a valid option (after one corrective reprompt). On null the caller is
    * expected to apply a deterministic fallback.
    */
-  async function chooseOption(messages, validOptionIds, { temperature = GEN.tempAdvocacy, maxTokens = GEN.maxTokensProposal } = {}) {
+  async function chooseOption(messages, validOptionIds, { temperature = GEN.tempAdvocacy, label = '' } = {}) {
     const valid = new Set(validOptionIds);
     let convo = messages;
     for (let attempt = 0; attempt < 2; attempt++) {
-      const content = await rawChat(convo, { temperature, maxTokens });
+      const content = await rawChat(convo, { temperature, label });
       const parsed = extractJson(content);
       if (parsed && typeof parsed.optionId === 'string' && valid.has(parsed.optionId)) {
         return { optionId: parsed.optionId, rationale: String(parsed.rationale ?? parsed.reason ?? '').trim(), raw: content };
@@ -91,7 +104,7 @@ export function createLLM({ model, baseUrl = VLLM_BASE_URL, log = () => {} }) {
     return null;
   }
 
-  return { text, chooseOption, usage, model };
+  return { text, chooseOption, usage, transcript, model };
 }
 
 /** Pull the first JSON object out of a model response (tolerates fences/prose). */

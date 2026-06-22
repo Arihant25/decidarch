@@ -13,6 +13,7 @@
 // Env: GAME_HOST, VLLM_BASE_URL, PYTHON, GPU_BUSY_W (gate threshold, watts)
 
 import net from 'node:net';
+import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,7 +22,7 @@ import { GAME_HOST, MODELS } from './config.mjs';
 import { createLLM } from './llmClient.mjs';
 import { Table } from './table.mjs';
 import { runGame } from './runner.mjs';
-import { energyRead, baselinePower, writeResult } from './metrics.mjs';
+import { energyRead, baselinePower, writeResult, RESULTS_DIR } from './metrics.mjs';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const log = (...a) => console.log(`[${new Date().toLocaleTimeString()}]`, ...a);
@@ -133,8 +134,19 @@ async function main() {
   };
 
   const base2 = writeResult(row);
+
+  // Full replication record: every LLM prompt+response in order, plus the
+  // authoritative final game-state (complete chat transcript, all group
+  // decisions, concern/event order, stakeholder overrides, score).
+  const txDir = path.join(RESULTS_DIR, 'transcripts');
+  fs.mkdirSync(txDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(txDir, `${base2}.json`),
+    JSON.stringify({ game: row, finalState, llm_calls: llm.transcript }, null, 2)
+  );
+
   log(`\n✅ DONE — grade=${row.grade} score=${row.final_score} | energy=${row.energy_j} J | time=${row.wall_s} s | in=${row.input_tokens} out=${row.output_tokens} tok | calls=${row.llm_calls}`);
-  log(`   saved results/${base2}.json (+ summary.csv)`);
+  log(`   saved results/${base2}.json + transcripts/${base2}.json (+ summary.csv)`);
   await sleep(200);
   process.exit(0);
 }

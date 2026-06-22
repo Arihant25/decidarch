@@ -36,7 +36,7 @@ export default {
         const content = debateTurnUser(deck, state, concern, proposals, chat, seat);
         const turn = await llm.text(
           [{ role: 'system', content: championSystem(seat) }, { role: 'user', content }],
-          { temperature: GEN.tempAdvocacy, maxTokens: GEN.maxTokensDebate }
+          { temperature: GEN.tempAdvocacy, label: `debate:${seat}:${concern.id}` }
         );
         // Post the full argument to the chat API — no arbitrary truncation.
         const text = turn.replace(/\s+/g, ' ').trim();

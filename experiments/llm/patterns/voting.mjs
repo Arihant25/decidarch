@@ -36,7 +36,7 @@ export default {
       const v =
         (await llm.chooseOption(msgs(championSystem(seat), content), legalOptionIds, {
           temperature: GEN.tempAdvocacy,
-          maxTokens: GEN.maxTokensVote,
+          label: `vote:${seat}:${concern.id}`,
         })) || { optionId: proposals.find((p) => p.qa === seat)?.optionId || legalOptionIds[0], rationale: '(fallback) own proposal' };
       votes.push({ seat, optionId: v.optionId, rationale: v.rationale });
       await table.chat(seat, `${seat} votes ${optName(concern, v.optionId)}.`);

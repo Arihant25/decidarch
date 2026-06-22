@@ -80,7 +80,7 @@ export async function fileProposal({ table, llm, deck, state, concern, seatName,
   const choice =
     (await llm.chooseOption(msgs(system, content), legalOptionIds, {
       temperature: persona === 'baseline' ? GEN.tempFacilitator : GEN.tempAdvocacy,
-      maxTokens: GEN.maxTokensProposal,
+      label: `propose:${persona}:${concern.id}`,
     })) || { optionId: bestOptionDeterministic(deck, state, concern, legalOptionIds), rationale: '(fallback) safest balanced option' };
 
   table.send(seatName, 'submit-decision', { optionId: choice.optionId, rationale: choice.rationale });
@@ -94,7 +94,7 @@ export async function facilitatorChoose({ llm, deck, state, concern, proposals, 
   const { legalOptionIds, content } = synthesisUser(deck, state, concern, proposals, chat);
   const choice = await llm.chooseOption(msgs(facilitatorSystem(), content), legalOptionIds, {
     temperature: GEN.tempFacilitator,
-    maxTokens: GEN.maxTokensSynthesis,
+    label: `synthesis:${concern.id}`,
   });
   return choice || { optionId: bestOptionDeterministic(deck, state, concern, legalOptionIds), rationale: '(fallback) best balanced option for all stakeholders' };
 }
@@ -136,7 +136,7 @@ export async function reviseBanned({ table, host, llm, deck, state, log }) {
     const choice =
       (await llm.chooseOption(msgs(facilitatorSystem(), content), legal, {
         temperature: GEN.tempFacilitator,
-        maxTokens: GEN.maxTokensRevision,
+        label: `revision:${concern.id}`,
       })) || { optionId: bestOptionDeterministic(deck, state, concern, legal), rationale: '(fallback) best legal replacement' };
     table.send(host, 'revise-decision', { concernId: d.concernId, optionId: choice.optionId, rationale: choice.rationale });
     log(`  🔧 revised "${concern.title}" → "${optName(concern, choice.optionId)}" (was banned)`);

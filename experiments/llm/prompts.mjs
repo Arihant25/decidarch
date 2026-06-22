@@ -92,7 +92,7 @@ export function contextBlock(deck, state) {
 // ---------------- System prompts (persona definitions) ----------------
 
 export function championSystem(qa) {
-  return `You are a senior software architect on a team playing DecidArch (Classic mode). You are the ${qa.toUpperCase()} CHAMPION: your job is to push for choices that protect and improve ${qa}. Argue honestly from that lens, but you understand the whole team must avoid ANY attribute going negative and must satisfy every stakeholder — so you may concede when another attribute is at risk. Be concise and specific about impact numbers.\n\n${RULES}`;
+  return `You are a senior software architect on a team playing DecidArch (Classic mode). You are the ${qa.toUpperCase()} CHAMPION: your job is to push for choices that protect and improve ${qa}. Argue honestly from that lens, but you understand the whole team must avoid ANY attribute going negative and must satisfy every stakeholder — so you may concede when another attribute is at risk. Be specific about impact numbers.\n\n${RULES}`;
 }
 
 export function facilitatorSystem() {
@@ -106,7 +106,7 @@ export function baselineSystem() {
 // ---------------- User prompts (per phase) ----------------
 
 const OPTION_CONTRACT = (legal) =>
-  `Respond with ONLY a JSON object, no other text:\n{"optionId":"<one of: ${legal.join(', ')}>","rationale":"<<=80 words explaining the choice in terms of impacts and stakeholders>"}`;
+  `Respond with ONLY a JSON object, no other text:\n{"optionId":"<one of: ${legal.join(', ')}>","rationale":"<explain the choice in terms of impacts and stakeholders>"}`;
 
 export function proposalUser(deck, state, concern, persona) {
   const cb = concernBlock(concern, state);
@@ -126,7 +126,7 @@ export function debateTurnUser(deck, state, concern, proposals, chatSoFar, qa) {
     .map((p) => `- ${p.name} (${p.qa}) proposed "${optName(concern, p.optionId)}": ${p.rationale}`)
     .join('\n');
   const chat = chatSoFar.length ? chatSoFar.map((c) => `${c.name}: ${c.text}`).join('\n') : '(no discussion yet)';
-  return `${contextBlock(deck, state)}\n\n${cb.text}\n\nThe team's private proposals were:\n${props}\n\nDiscussion so far:\n${chat}\n\nPHASE: GROUP DISCUSSION. You champion ${qa}. In <=70 words, react to the others, defend or concede, and move the team toward one option. Plain text only — do NOT output JSON.`;
+  return `${contextBlock(deck, state)}\n\n${cb.text}\n\nThe team's private proposals were:\n${props}\n\nDiscussion so far:\n${chat}\n\nPHASE: GROUP DISCUSSION. You champion ${qa}. React to the others, defend your attribute or concede where the team is at risk, and move the team toward one option. Plain text only — do NOT output JSON.`;
 }
 
 export function voteUser(deck, state, concern, proposals, qa) {
@@ -136,7 +136,7 @@ export function voteUser(deck, state, concern, proposals, qa) {
     .join('\n');
   return {
     legalOptionIds: cb.legalOptionIds,
-    content: `${contextBlock(deck, state)}\n\n${cb.text}\n\nThe proposals on the table:\n${props}\n\nPHASE: VOTE. You champion ${qa}. Vote for the ONE option you believe the team should adopt (you may vote for someone else's proposal if it is better overall).\nRespond with ONLY JSON:\n{"optionId":"<one of: ${cb.legalOptionIds.join(', ')}>","rationale":"<<=40 words why>"}`,
+    content: `${contextBlock(deck, state)}\n\n${cb.text}\n\nThe proposals on the table:\n${props}\n\nPHASE: VOTE. You champion ${qa}. Vote for the ONE option you believe the team should adopt (you may vote for someone else's proposal if it is better overall).\nRespond with ONLY JSON:\n{"optionId":"<one of: ${cb.legalOptionIds.join(', ')}>","rationale":"<why>"}`,
   };
 }
 
