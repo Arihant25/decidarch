@@ -40,11 +40,14 @@ export const GEN = {
   enableThinking: false,
   tempAdvocacy: 0.7, // proposals, debate turns, votes — want diversity
   tempFacilitator: 0.3, // neutral synthesis / revision — want consistency
-  maxTokensProposal: 240,
-  maxTokensVote: 90,
-  maxTokensDebate: 170,
-  maxTokensSynthesis: 320,
-  maxTokensRevision: 240,
+  // Caps are generous safety nets, not content limits: the prompts ask for
+  // concise answers, so normal responses finish well inside these and are
+  // never cut mid-sentence. They only guard against pathological runaways.
+  maxTokensProposal: 512,
+  maxTokensVote: 256,
+  maxTokensDebate: 512,
+  maxTokensSynthesis: 640,
+  maxTokensRevision: 512,
 };
 
 // Debate pattern: how many discussion turns each agent takes after the

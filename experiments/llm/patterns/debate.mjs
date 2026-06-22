@@ -38,7 +38,8 @@ export default {
           [{ role: 'system', content: championSystem(seat) }, { role: 'user', content }],
           { temperature: GEN.tempAdvocacy, maxTokens: GEN.maxTokensDebate }
         );
-        const text = turn.replace(/\s+/g, ' ').trim().slice(0, 400);
+        // Post the full argument to the chat API — no arbitrary truncation.
+        const text = turn.replace(/\s+/g, ' ').trim();
         chat.push({ name: seat, text });
         await table.chat(seat, text);
       }
