@@ -26,9 +26,10 @@ coverage of the decision criteria, held constant across `role`/`voting`/`debate`
 ## Study design
 
 - Models, served on vLLM one at a time (DGX Spark, 121 GB unified): `gemma` =
-  `google/gemma-4-26B-A4B-it` first, then `qwen` = `Qwen/Qwen3.6-35B-A3B` (MoE;
-  chosen over the dense 27B because the Spark's memory bandwidth makes dense
-  models of that size ~5x slower).
+  `nvidia/Gemma-4-26B-A4B-NVFP4` first, then `qwen` =
+  `nvidia/Qwen3.5-122B-A10B-NVFP4`. Both are **NVFP4 4-bit** (Blackwell-native)
+  MoE checkpoints — small active footprint + 4-bit weights keep decode fast on the
+  bandwidth-bound Spark, and 4-bit lets even the 122B MoE fit the unified pool.
 - 4 patterns × 2 models × **5 repetitions** = 40 games.
 - Thinking is disabled on every call for bounded, comparable token budgets.
 

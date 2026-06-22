@@ -14,12 +14,15 @@ export const VLLM_BASE_URL = process.env.VLLM_BASE_URL || 'http://localhost:8000
 
 // The two models under study, addressed by their served model id.
 // gemma is studied first, then qwen (see README).
+// Both models are NVIDIA NVFP4 (4-bit, Blackwell-native) checkpoints — small in
+// the 121 GB unified pool and fast on this bandwidth-bound box. Both are MoE
+// (small active footprint). NVFP4 is auto-detected by vLLM from the checkpoint.
+//   gemma = NVFP4 of google/gemma-4-26B-A4B-it (multimodal; serve with --limit-mm-per-prompt)
+//   qwen  = NVFP4 of a 122B-A10B MoE (10B active)
+// (Why not bf16: dense 27B was bandwidth-bound ~5 tok/s; bf16 35B OOM'd the box.)
 export const MODELS = {
-  gemma: process.env.GEMMA_MODEL || 'google/gemma-4-26B-A4B-it',
-  // MoE (~3B active): chosen over the 27B dense because the GB10's ~273 GB/s
-  // unified memory makes a dense 27B bandwidth-bound (~5 tok/s); the MoE runs
-  // at gemma-like speed.
-  qwen: process.env.QWEN_MODEL || 'Qwen/Qwen3.6-35B-A3B',
+  gemma: process.env.GEMMA_MODEL || 'nvidia/Gemma-4-26B-A4B-NVFP4',
+  qwen: process.env.QWEN_MODEL || 'nvidia/Qwen3.5-122B-A10B-NVFP4',
 };
 
 // The four patterns from the Agent Design Pattern Catalogue
