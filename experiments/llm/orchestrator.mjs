@@ -143,7 +143,8 @@ async function main() {
   // Full replication record: every LLM prompt+response in order, plus the
   // authoritative final game-state (complete chat transcript, all group
   // decisions, concern/event order, stakeholder overrides, score).
-  const txDir = path.join(RESULTS_DIR, 'transcripts');
+  const modelKey = /gemma/i.test(modelId) ? 'gemma' : /qwen/i.test(modelId) ? 'qwen' : modelId.replace(/[\/]/g, '_');
+  const txDir = path.join(RESULTS_DIR, 'transcripts', modelKey);
   fs.mkdirSync(txDir, { recursive: true });
   fs.writeFileSync(
     path.join(txDir, `${base2}.json`),
@@ -151,7 +152,7 @@ async function main() {
   );
 
   log(`\n✅ DONE — grade=${row.grade} score=${row.final_score} | energy=${row.energy_j} J | time=${row.wall_s} s | in=${row.input_tokens} out=${row.output_tokens} tok | calls=${row.llm_calls}`);
-  log(`   saved results/${base2}.json + transcripts/${base2}.json (+ summary.csv)`);
+  log(`   saved results/${modelKey}/${base2}.json + transcripts/${modelKey}/${base2}.json (+ summary.csv)`);
   await sleep(200);
   process.exit(0);
 }

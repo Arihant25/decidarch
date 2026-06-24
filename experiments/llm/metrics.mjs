@@ -34,10 +34,14 @@ const CSV_COLUMNS = [
 export function writeResult(row) {
   fs.mkdirSync(RESULTS_DIR, { recursive: true });
 
-  // Detailed per-game record.
+  // Detailed per-game record — written into a model subfolder.
+  const modelKey = /gemma/i.test(row.model) ? 'gemma' : /qwen/i.test(row.model) ? 'qwen' : row.model.replace(/[\/]/g, '_');
+  const modelDir = path.join(RESULTS_DIR, modelKey);
+  fs.mkdirSync(modelDir, { recursive: true });
+
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const base = `${row.model.replace(/[\/]/g, '_')}__${row.pattern}__run${row.run_id}__${stamp}`;
-  fs.writeFileSync(path.join(RESULTS_DIR, `${base}.json`), JSON.stringify(row, null, 2));
+  fs.writeFileSync(path.join(modelDir, `${base}.json`), JSON.stringify(row, null, 2));
 
   // Flat summary row.
   const csvPath = path.join(RESULTS_DIR, 'summary.csv');
