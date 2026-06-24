@@ -1,5 +1,7 @@
 # DecidArch
 
+![DecidArch screenshot](./screenshot.png)
+
 A real-time, multiplayer card game that teaches **software architecture decision-making**. A
 team of "architects" works through a series of design *concerns*, weighs the trade-offs, agrees
 on a decision for each, and rides out *events* that change the requirements underneath them —
