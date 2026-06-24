@@ -1,0 +1,106 @@
+{
+  "timestamp": "2026-06-22T23:30:23.764Z",
+  "model": "nvidia/Qwen3.5-122B-A10B-NVFP4",
+  "pattern": "baseline",
+  "run_id": "2",
+  "seed": "decidarch-classic-run2",
+  "grade": "Lost",
+  "final_score": 8,
+  "lost": true,
+  "energy_j": 12953.7,
+  "wall_s": 361.5,
+  "avg_power_w": 35.8,
+  "input_tokens": 10188,
+  "output_tokens": 4813,
+  "llm_calls": 11,
+  "llm_failures": 0,
+  "n_agents": 1,
+  "baseline_power_w": 14.4,
+  "concern_order": "concern-3|concern-10|concern-2|concern-21|concern-4|concern-9|concern-6|concern-1|concern-8|concern-5",
+  "event_order": "event-data-protection|event-new-cto|event-malware|event-user-survey|event-fire",
+  "drawn_events": "event-data-protection|event-new-cto",
+  "qa_scores": [
+    {
+      "attribute": "Usability",
+      "plusCount": 6,
+      "minusCount": 0,
+      "score": 6
+    },
+    {
+      "attribute": "Security",
+      "plusCount": 7,
+      "minusCount": 2,
+      "score": 5
+    },
+    {
+      "attribute": "Performance",
+      "plusCount": 4,
+      "minusCount": 2,
+      "score": 2
+    },
+    {
+      "attribute": "Availability",
+      "plusCount": 4,
+      "minusCount": 0,
+      "score": 4
+    },
+    {
+      "attribute": "Maintainability",
+      "plusCount": 3,
+      "minusCount": 5,
+      "score": -2
+    }
+  ],
+  "group_decisions": [
+    {
+      "concern": "Sensitive Data Storage",
+      "option": "Multiple Distributed Databases",
+      "optionId": "c3-opt1"
+    },
+    {
+      "concern": "User Interface",
+      "option": "Responsive Web App",
+      "optionId": "c10-opt2"
+    },
+    {
+      "concern": "Operational Data Storage",
+      "option": "Multiple Distributed Databases",
+      "optionId": "c2-opt1"
+    },
+    {
+      "concern": "Data Encryption",
+      "option": "Full Encryption",
+      "optionId": "c21-opt2"
+    },
+    {
+      "concern": "E-Payment System",
+      "option": "Outsource E-Payment",
+      "optionId": "c4-opt1"
+    },
+    {
+      "concern": "Advertisement Hosting",
+      "option": "Hybrid Approach",
+      "optionId": "c9-opt3"
+    },
+    {
+      "concern": "Static Content Delivery",
+      "option": "3rd Party CDN",
+      "optionId": "c6-opt2"
+    },
+    {
+      "concern": "Article Storage",
+      "option": "Multiple Distributed Databases",
+      "optionId": "c1-opt1"
+    },
+    {
+      "concern": "Account Data Protection",
+      "option": "Email-Based Recovery",
+      "optionId": "c8-opt3"
+    },
+    {
+      "concern": "Anonymous Usage",
+      "option": "Anonymous Guest Accounts",
+      "optionId": "c5-opt3"
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "timestamp": "2026-06-23T17:28:00.677Z",
+  "model": "nvidia/Gemma-4-26B-A4B-NVFP4",
+  "pattern": "role",
+  "run_id": "5",
+  "seed": "decidarch-classic-run5",
+  "grade": "Lost",
+  "final_score": 9,
+  "lost": true,
+  "energy_j": 23063.1,
+  "wall_s": 655.6,
+  "avg_power_w": 35.2,
+  "input_tokens": 58173,
+  "output_tokens": 18183,
+  "llm_calls": 60,
+  "llm_failures": 0,
+  "n_agents": 5,
+  "baseline_power_w": 14.5,
+  "concern_order": "concern-4|concern-5|concern-9|concern-8|concern-10|concern-3|concern-21|concern-2|concern-1|concern-6",
+  "event_order": "event-new-cto|event-malware|event-data-protection|event-fire|event-user-survey",
+  "drawn_events": "event-new-cto|event-malware",
+  "qa_scores": [
+    {
+      "attribute": "Usability",
+      "plusCount": 4,
+      "minusCount": 0,
+      "score": 4
+    },
+    {
+      "attribute": "Security",
+      "plusCount": 6,
+      "minusCount": 3,
+      "score": 3
+    },
+    {
+      "attribute": "Performance",
+      "plusCount": 5,
+      "minusCount": 1,
+      "score": 4
+    },
+    {
+      "attribute": "Availability",
+      "plusCount": 3,
+      "minusCount": 0,
+      "score": 3
+    },
+    {
+      "attribute": "Maintainability",
+      "plusCount": 5,
+      "minusCount": 3,
+      "score": 2
+    }
+  ],
+  "group_decisions": [
+    {
+      "concern": "E-Payment System",
+      "option": "Outsource E-Payment",
+      "optionId": "c4-opt1"
+    },
+    {
+      "concern": "Anonymous Usage",
+      "option": "Anonymous Guest Accounts",
+      "optionId": "c5-opt3"
+    },
+    {
+      "concern": "Advertisement Hosting",
+      "option": "Hybrid Approach",
+      "optionId": "c9-opt3"
+    },
+    {
+      "concern": "Account Data Protection",
+      "option": "Email-Based Recovery",
+      "optionId": "c8-opt3"
+    },
+    {
+      "concern": "User Interface",
+      "option": "PC Web Pages",
+      "optionId": "c10-opt1"
+    },
+    {
+      "concern": "Sensitive Data Storage",
+      "option": "Cloud Storage",
+      "optionId": "c3-opt2"
+    },
+    {
+      "concern": "Data Encryption",
+      "option": "Encryption for Transmission Only",
+      "optionId": "c21-opt3"
+    },
+    {
+      "concern": "Operational Data Storage",
+      "option": "Multiple Distributed Databases",
+      "optionId": "c2-opt1"
+    },
+    {
+      "concern": "Article Storage",
+      "option": "Multiple Distributed Databases",
+      "optionId": "c1-opt1"
+    },
+    {
+      "concern": "Static Content Delivery",
+      "option": "3rd Party CDN",
+      "optionId": "c6-opt2"
+    }
+  ]
+}

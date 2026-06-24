@@ -1,0 +1,106 @@
+{
+  "timestamp": "2026-06-23T13:04:23.910Z",
+  "model": "nvidia/Gemma-4-26B-A4B-NVFP4",
+  "pattern": "baseline",
+  "run_id": "1",
+  "seed": "decidarch-classic-run1",
+  "grade": "Lost",
+  "final_score": 12,
+  "lost": true,
+  "energy_j": 6406.6,
+  "wall_s": 187.2,
+  "avg_power_w": 34.2,
+  "input_tokens": 7308,
+  "output_tokens": 5119,
+  "llm_calls": 10,
+  "llm_failures": 0,
+  "n_agents": 1,
+  "baseline_power_w": 11.9,
+  "concern_order": "concern-3|concern-4|concern-1|concern-9|concern-2|concern-8|concern-5|concern-6|concern-21|concern-10",
+  "event_order": "event-user-survey|event-malware|event-new-cto|event-fire|event-data-protection",
+  "drawn_events": "event-user-survey|event-malware",
+  "qa_scores": [
+    {
+      "attribute": "Usability",
+      "plusCount": 6,
+      "minusCount": 0,
+      "score": 6
+    },
+    {
+      "attribute": "Security",
+      "plusCount": 6,
+      "minusCount": 2,
+      "score": 4
+    },
+    {
+      "attribute": "Performance",
+      "plusCount": 4,
+      "minusCount": 1,
+      "score": 3
+    },
+    {
+      "attribute": "Availability",
+      "plusCount": 4,
+      "minusCount": 0,
+      "score": 4
+    },
+    {
+      "attribute": "Maintainability",
+      "plusCount": 3,
+      "minusCount": 5,
+      "score": -2
+    }
+  ],
+  "group_decisions": [
+    {
+      "concern": "Sensitive Data Storage",
+      "option": "Multiple Distributed Databases",
+      "optionId": "c3-opt1"
+    },
+    {
+      "concern": "E-Payment System",
+      "option": "Outsource E-Payment",
+      "optionId": "c4-opt1"
+    },
+    {
+      "concern": "Article Storage",
+      "option": "Multiple Distributed Databases",
+      "optionId": "c1-opt1"
+    },
+    {
+      "concern": "Advertisement Hosting",
+      "option": "Hybrid Approach",
+      "optionId": "c9-opt3"
+    },
+    {
+      "concern": "Operational Data Storage",
+      "option": "Multiple Distributed Databases",
+      "optionId": "c2-opt1"
+    },
+    {
+      "concern": "Account Data Protection",
+      "option": "Email-Based Recovery",
+      "optionId": "c8-opt3"
+    },
+    {
+      "concern": "Anonymous Usage",
+      "option": "Anonymous Guest Accounts",
+      "optionId": "c5-opt3"
+    },
+    {
+      "concern": "Static Content Delivery",
+      "option": "3rd Party CDN",
+      "optionId": "c6-opt2"
+    },
+    {
+      "concern": "Data Encryption",
+      "option": "Encryption for Transmission Only",
+      "optionId": "c21-opt3"
+    },
+    {
+      "concern": "User Interface",
+      "option": "Responsive Web App",
+      "optionId": "c10-opt2"
+    }
+  ]
+}
